@@ -15,6 +15,11 @@ export const errorResponse = (
   res,
   { statusCode = 500, message = "Internal server error", errors = null } = {},
 ) => {
+  console.log("[Response] Sending error response:", {
+  statusCode,
+  message,
+  errors,
+});
   return res.status(statusCode).json({
     status: statusCode,
     success: false,

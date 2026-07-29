@@ -1,9 +1,11 @@
-import dotenv  from "dotenv"
+import dotenv from "dotenv";
+
 dotenv.config();
 
-export const env = {
-    NODE_ENV: process.env.NODE_ENV,
-  PORT: process.env.PORT,
+const env = {
+  NODE_ENV: process.env.NODE_ENV,
+
+  PORT: Number(process.env.PORT),
 
   MONGODB_URI: process.env.MONGODB_URI,
 
@@ -18,5 +20,24 @@ export const env = {
   SMS_SENDER_NUMBER: process.env.SMS_SENDER_NUMBER,
   SMS_VERIFY_PATTERN_CODE: process.env.SMS_VERIFY_PATTERN_CODE,
 
+  IS_DEVELOPMENT: process.env.NODE_ENV === "development",
+  IS_PRODUCTION: process.env.NODE_ENV === "production",
+};
 
+const requiredEnvVariables = [
+  "NODE_ENV",
+  "PORT",
+  "MONGODB_URI",
+  "JWT_ACCESS_SECRET",
+  "JWT_REFRESH_SECRET",
+];
+
+for (const variable of requiredEnvVariables) {
+  if (!process.env[variable]) {
+    throw new Error(
+      `Missing required environment variable: ${variable}`,
+    );
+  }
 }
+
+export default env;

@@ -4,6 +4,8 @@ import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import errorHandler from "./middlewares/error-handler.js";
+import AppError from "./errors/app-error.js";
 
 const app = express();
 
@@ -45,10 +47,10 @@ app.get("/api/v1/health", (req, res) => {
 | 404 Handler
 |--------------------------------------------------------------------------
 */
-
-app.use((req, res) => {
-  return res.status(404).json({
-    success: false,
-    message: "Route Not Found",
-  });
+app.use((req, res, next) => {
+  next(new AppError("Route Not Found", 404));
 });
+
+app.use(errorHandler);
+
+export default app;

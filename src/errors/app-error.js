@@ -6,6 +6,7 @@ class AppError extends Error {
     this.statusCode = statusCode;
     this.errors = errors;
     this.isOperational = true;
+    console.log("[AppError] Constructor called");
     Error.captureStackTrace(this, this.constructor);
   }
 }
