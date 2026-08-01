@@ -19,9 +19,12 @@ async function connectToDatabase() {
 }
 
 function startServer() {
-  console.log("[Server] Starting HTTP server ...");
+  console.log("[Server] Starting HTTP server...");
+
   app.listen(env.PORT, () => {
-    console.log(`[Server] Server is running on http://localhost:${env.PORT}`);
+    console.log(
+      `[Server] Server is running on http://localhost:${env.PORT} | Mode: ${env.NODE_ENV}`
+    );
   });
 }
 
