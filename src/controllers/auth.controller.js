@@ -1,18 +1,18 @@
 import { successResponse } from "../helpers/response.js";
+import {
+  sendOtp,
+  verifyOtp as verifyOtpService,
+} from "../services/auth.service.js";
 import User from "./../models/user.model.js";
 
 export const sentOtp = async (req, res, next) => {
   try {
     const { phone } = req.body;
 
-    //TODO -> Generate OTP -> Save OTP in Redis -> send SMS
+    await sendOtp(phone);
 
     return successResponse(res, {
-      
       message: "OTP sent successfully",
-      data: {
-        phone,
-      },
     });
   } catch (error) {
     next(error);
@@ -21,25 +21,19 @@ export const sentOtp = async (req, res, next) => {
 export const verifyOtp = async (req, res, next) => {
   try {
     const { phone, otp } = req.body;
-    //TODO verify OTP from Redis
 
-    let user = await User.findOne({ phone });
+    const user = await verifyOtpService(phone, otp);
+    
 
-    if (!user) {
-      user = await User.create({ phone, isVerified: true });
-      
-    }
-    return successResponse(res , {
-        message:"OTP verified successfully",
-        data:{
-            user,
-            profileCompleted:Boolean(
-                user.firstName &&
-                user.lastName && 
-                user.nationalCode
-            )
-        }
-    })
+    return successResponse(res, {
+      message: "OTP verified successfully",
+      data: {
+        user,
+        profileCompleted: Boolean(
+          user.firstName && user.lastName && user.nationalCode,
+        ),
+      },
+    });
   } catch (error) {
     next(error);
   }

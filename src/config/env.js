@@ -19,6 +19,7 @@ const env = {
   SMS_PASSWORD: process.env.SMS_PASSWORD,
   SMS_SENDER_NUMBER: process.env.SMS_SENDER_NUMBER,
   SMS_VERIFY_PATTERN_CODE: process.env.SMS_VERIFY_PATTERN_CODE,
+  OTP_EXPIRE_SECONDS:Number(process.env.OTP_EXPIRE_SECONDS),
 
   IS_DEVELOPMENT: process.env.NODE_ENV === "development",
   IS_PRODUCTION: process.env.NODE_ENV === "production",
