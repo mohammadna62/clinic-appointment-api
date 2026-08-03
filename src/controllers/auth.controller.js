@@ -22,13 +22,17 @@ export const verifyOtp = async (req, res, next) => {
   try {
     const { phone, otp } = req.body;
 
-    const user = await verifyOtpService(phone, otp);
-    
+    const { user, refreshToken, accessToken } = await verifyOtpService(
+      phone,
+      otp,
+    );
 
     return successResponse(res, {
       message: "OTP verified successfully",
       data: {
         user,
+        accessToken,
+        refreshToken,
         profileCompleted: Boolean(
           user.firstName && user.lastName && user.nationalCode,
         ),

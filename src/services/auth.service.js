@@ -5,6 +5,10 @@ import AppError from "./../errors/app-error.js";
 import { generateOtp } from "../utils/otp.util.js";
 import { sendSms } from "./sms.service.js";
 import { redis } from "../config/redis.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "./../utils/jwt.util.js";
 import env from "./../config/env.js";
 
 export async function sendOtp(phone) {
@@ -27,7 +31,7 @@ export async function verifyOtp(phone, otp) {
   if (!hashedOtp) {
     throw new AppError("OTP has expired or is invalid", 400);
   }
-  const isValidOtp =await bcrypt.compare(otp, hashedOtp);
+  const isValidOtp = await bcrypt.compare(otp, hashedOtp);
 
   if (!isValidOtp) {
     throw new AppError("Invalid OTP", 400);
@@ -37,10 +41,25 @@ export async function verifyOtp(phone, otp) {
   let user = await User.findOne({ phone });
 
   if (!user) {
+    const usersCount = await User.countDocuments();
+
+    const role = usersCount === 0 ? "admin" : "patient";
+
     user = await User.create({
       phone,
+      role,
       isVerified: true,
     });
   }
-  return user;
+  const payload = {
+    userId: user._id,
+    role: user.role,
+  };
+  const accessToken = generateAccessToken(payload);
+  const refreshToken = generateRefreshToken(payload);
+  return {
+    user,
+    accessToken,
+    refreshToken,
+  };
 }
