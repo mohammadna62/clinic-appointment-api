@@ -1,3 +1,4 @@
+import AppError from "../errors/app-error.js";
 import { successResponse } from "../helpers/response.js";
 import {
   sendOtp,
@@ -42,3 +43,25 @@ export const verifyOtp = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+export const getMe = async(req , res , next) =>{
+  try {
+    const user = await User.findById(req.user.userId)
+
+    if(!user){
+      throw new AppError("User not found",404)
+    }
+
+    return successResponse(res, {
+      message:"User profile fetch successfully",
+      data:{
+        user,
+      }
+    })
+
+  } catch (error) {
+    next(error)
+  }
+}

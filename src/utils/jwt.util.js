@@ -14,3 +14,10 @@ export function generateRefreshToken(payload) {
         expiresIn:env.JWT_REFRESH_EXPIRES_IN
     })
 }
+
+
+export function verifyAccessToken(token){
+
+return jwt.verify(token, env.JWT_ACCESS_SECRET)
+
+}
