@@ -8,8 +8,10 @@ import { redis } from "../config/redis.js";
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyRefreshToken,
 } from "./../utils/jwt.util.js";
 import env from "./../config/env.js";
+import {hashToken} from "./../utils/hash.util.js"
 
 export async function sendOtp(phone) {
   const otp = generateOtp();
@@ -57,9 +59,62 @@ export async function verifyOtp(phone, otp) {
   };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
+
+  const refreshKey = `auth:refresh:${user._id}`;
+
+  const hashedRefreshToken = hashToken(refreshToken);
+
+  await redis.set(
+    refreshKey,
+    hashedRefreshToken,
+    "EX",
+    env.REFRESH_TOKEN_EXPIRE_SECONDS,
+  );
+
   return {
     user,
     accessToken,
     refreshToken,
+  };
+}
+
+export async function refreshToken(refreshToken) {
+  const payload = verifyRefreshToken(refreshToken);
+
+  const refreshKey = `auth:refresh:${payload.userId}`;
+
+  const hashedToken = await redis.get(refreshKey);
+
+  if (!hashedToken) {
+    throw new AppError("Refresh token expired", 401);
+  }
+
+const hashedIncomingToken = hashToken(refreshToken);
+
+const isValid = hashedIncomingToken === hashedToken;
+
+  if (!isValid) {
+    throw new AppError("Invalid refresh token", 401);
+  }
+
+  const newPayload = {
+    userId: payload.userId,
+    role: payload.role,
+  };
+
+  const newAccessToken = generateAccessToken(newPayload);
+  const newRefreshToken = generateRefreshToken(newPayload);
+
+
+  await redis.set(
+    refreshKey,
+     hashToken(newRefreshToken),
+    "EX",
+    env.REFRESH_TOKEN_EXPIRE_SECONDS,
+  );
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
   };
 }

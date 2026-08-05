@@ -17,6 +17,7 @@ const env = {
 
   REDIS_HOST: process.env.REDIS_HOST,
   REDIS_PORT: process.env.REDIS_PORT,
+  REFRESH_TOKEN_EXPIRE_SECONDS:Number(process.env.REFRESH_TOKEN_EXPIRE_SECONDS),
 
   SMS_USERNAME: process.env.SMS_USERNAME,
   SMS_PASSWORD: process.env.SMS_PASSWORD,

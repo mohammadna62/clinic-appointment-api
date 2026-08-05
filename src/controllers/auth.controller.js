@@ -3,6 +3,7 @@ import { successResponse } from "../helpers/response.js";
 import {
   sendOtp,
   verifyOtp as verifyOtpService,
+  refreshToken as refreshTokenService,
 } from "../services/auth.service.js";
 import User from "./../models/user.model.js";
 
@@ -44,24 +45,37 @@ export const verifyOtp = async (req, res, next) => {
   }
 };
 
-
-
-export const getMe = async(req , res , next) =>{
+export const getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId)
+    const user = await User.findById(req.user.userId);
 
-    if(!user){
-      throw new AppError("User not found",404)
+    if (!user) {
+      throw new AppError("User not found", 404);
     }
 
     return successResponse(res, {
-      message:"User profile fetch successfully",
-      data:{
+      message: "User profile fetch successfully",
+      data: {
         user,
-      }
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refreshToken = async (req, res, next) => {
+  try {
+    const {refreshToken}  = req.body
+
+    const tokens = await refreshTokenService(refreshToken);
+
+    return successResponse(res,{
+      message:"Token refreshed successfully",
+      data:tokens
     })
 
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
