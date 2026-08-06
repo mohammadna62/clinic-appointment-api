@@ -11,7 +11,7 @@ import {
   verifyRefreshToken,
 } from "./../utils/jwt.util.js";
 import env from "./../config/env.js";
-import {hashToken} from "./../utils/hash.util.js"
+import { hashToken, compareToken } from "./../utils/hash.util.js";
 
 export async function sendOtp(phone) {
   const otp = generateOtp();
@@ -89,9 +89,7 @@ export async function refreshToken(refreshToken) {
     throw new AppError("Refresh token expired", 401);
   }
 
-const hashedIncomingToken = hashToken(refreshToken);
-
-const isValid = hashedIncomingToken === hashedToken;
+  const isValid = compareToken(refreshToken, hashedToken);
 
   if (!isValid) {
     throw new AppError("Invalid refresh token", 401);
@@ -105,14 +103,16 @@ const isValid = hashedIncomingToken === hashedToken;
   const newAccessToken = generateAccessToken(newPayload);
   const newRefreshToken = generateRefreshToken(newPayload);
 
+  const newRefreshKey = `auth:refresh:${payload.userId}`;
+
+  const hashedRefreshToken = hashToken(newRefreshToken);
 
   await redis.set(
-    refreshKey,
-     hashToken(newRefreshToken),
+    newRefreshKey,
+    hashedRefreshToken,
     "EX",
     env.REFRESH_TOKEN_EXPIRE_SECONDS,
   );
-
   return {
     accessToken: newAccessToken,
     refreshToken: newRefreshToken,
