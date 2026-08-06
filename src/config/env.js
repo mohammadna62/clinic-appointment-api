@@ -1,48 +1,43 @@
 import dotenv from "dotenv";
-import { number } from "zod";
+import { z } from "zod";
 
 dotenv.config();
 
-const env = {
-  NODE_ENV: process.env.NODE_ENV,
+const envSchema = z.object({
+  NODE_ENV: z.string(),
 
-  PORT: Number(process.env.PORT),
+  PORT: z.coerce.number(),
 
-  MONGODB_URI: process.env.MONGODB_URI,
+  MONGODB_URI: z.string().min(1),
 
-  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
-  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
-  JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN,
-  JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN,
+  JWT_ACCESS_SECRET: z.string().min(1),
+  JWT_REFRESH_SECRET: z.string().min(1),
 
-  REDIS_HOST: process.env.REDIS_HOST,
-  REDIS_PORT: process.env.REDIS_PORT,
-  REFRESH_TOKEN_EXPIRE_SECONDS:Number(process.env.REFRESH_TOKEN_EXPIRE_SECONDS),
+  JWT_ACCESS_EXPIRES_IN: z.string(),
+  JWT_REFRESH_EXPIRES_IN: z.string(),
 
-  TOKEN_HASH_SECRET:process.env.TOKEN_HASH_SECRET,
+  REDIS_HOST: z.string(),
+  REDIS_PORT: z.coerce.number(),
 
-  SMS_USERNAME: process.env.SMS_USERNAME,
-  SMS_PASSWORD: process.env.SMS_PASSWORD,
-  SMS_SENDER_NUMBER: process.env.SMS_SENDER_NUMBER,
-  SMS_VERIFY_PATTERN_CODE: process.env.SMS_VERIFY_PATTERN_CODE,
-  OTP_EXPIRE_SECONDS: Number(process.env.OTP_EXPIRE_SECONDS),
+  REFRESH_TOKEN_EXPIRE_SECONDS: z.coerce.number(),
 
-  IS_DEVELOPMENT: process.env.NODE_ENV === "development",
-  IS_PRODUCTION: process.env.NODE_ENV === "production",
+  TOKEN_HASH_SECRET: z.string().min(1),
+
+  OTP_EXPIRE_SECONDS: z.coerce.number(),
+
+  SMS_USERNAME: z.string().optional(),
+  SMS_PASSWORD: z.string().optional(),
+  SMS_SENDER_NUMBER: z.string().optional(),
+  SMS_VERIFY_PATTERN_CODE: z.string().optional(),
+});
+
+
+const parsedEnv = envSchema.parse(process.env);
+
+
+export default {
+  ...parsedEnv,
+
+  IS_DEVELOPMENT: parsedEnv.NODE_ENV === "development",
+  IS_PRODUCTION: parsedEnv.NODE_ENV === "production",
 };
-
-const requiredEnvVariables = [
-  "NODE_ENV",
-  "PORT",
-  "MONGODB_URI",
-  "JWT_ACCESS_SECRET",
-  "JWT_REFRESH_SECRET",
-];
-
-for (const variable of requiredEnvVariables) {
-  if (!process.env[variable]) {
-    throw new Error(`Missing required environment variable: ${variable}`);
-  }
-}
-
-export default env;
