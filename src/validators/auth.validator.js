@@ -13,3 +13,20 @@ export const verifyOtpSchema = z.object({
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, "Refresh token is required"),
 });
+
+export const completeProfileSchema = z.object({
+  firstName: z
+    .string()
+    .trim()
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name is too long"),
+  lastName: z
+    .string()
+    .trim()
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name is too long"),
+
+  nationalCode: z
+    .string()
+    .regex(/^\d{10}$/, " National code must be 10 digits"),
+}).strict();

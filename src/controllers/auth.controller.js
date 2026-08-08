@@ -4,6 +4,7 @@ import {
   sendOtp,
   verifyOtp as verifyOtpService,
   refreshToken as refreshTokenService,
+  completeProfile as completeProfileService,
 } from "../services/auth.service.js";
 import User from "./../models/user.model.js";
 
@@ -57,6 +58,9 @@ export const getMe = async (req, res, next) => {
       message: "User profile fetch successfully",
       data: {
         user,
+        profileCompleted: Boolean(
+          user.firstName && user.lastName && user.nationalCode,
+        ),
       },
     });
   } catch (error) {
@@ -66,15 +70,34 @@ export const getMe = async (req, res, next) => {
 
 export const refreshToken = async (req, res, next) => {
   try {
-    const {refreshToken}  = req.body
+    const { refreshToken } = req.body;
 
     const tokens = await refreshTokenService(refreshToken);
 
-    return successResponse(res,{
-      message:"Token refreshed successfully",
-      data:tokens
-    })
+    return successResponse(res, {
+      message: "Token refreshed successfully",
+      data: tokens,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
+export const completeProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await completeProfileService(userId, req.body);
+
+    return successResponse(res, {
+      message: "Profile completed successfully",
+      data: {
+        user,
+        profileCompleted: Boolean(
+          user.firstName && user.lastName && user.nationalCode,
+        ),
+      },
+    });
   } catch (error) {
     next(error);
   }

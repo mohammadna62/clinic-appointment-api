@@ -118,3 +118,35 @@ export async function refreshToken(refreshToken) {
     refreshToken: newRefreshToken,
   };
 }
+
+export async function completeProfile(userId, data) {
+  const { firstName, lastName, nationalCode } = data;
+
+  const existingUser = await User.findOne({
+    nationalCode,
+    _id: { $ne: userId },
+  });
+
+  if (existingUser) {
+    throw new AppError("National code is already in use", 409);
+  }
+
+  const user = await User.findByIdAndUpdate(
+    userId,
+    {
+      firstName,
+      lastName,
+      nationalCode,
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  return user;
+}
