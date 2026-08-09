@@ -8,6 +8,7 @@ import errorHandler from "./middlewares/error-handler.js";
 import AppError from "./errors/app-error.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import adminRoutes from "./routes/admin.routes.js"
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use(cookieParser());
 */
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes)
 
 /*
 |--------------------------------------------------------------------------
