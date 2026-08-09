@@ -1,6 +1,7 @@
 import AppError from "./../errors/app-error.js";
 
 import { verifyAccessToken } from "../utils/jwt.util.js";
+import User from "./../models/user.model.js";
 
 const auth = async (req, res, next) => {
   try {
@@ -18,7 +19,18 @@ const auth = async (req, res, next) => {
 
     const payload = verifyAccessToken(token);
 
-    req.user = payload;
+    const user = await User.findById(payload.userId);
+
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+    if (user.isBanned) {
+      throw new AppError("User is banned", 403);
+    }
+    req.user = {
+      userId: user._id,
+      role: user.role,
+    };
 
     next();
   } catch (error) {

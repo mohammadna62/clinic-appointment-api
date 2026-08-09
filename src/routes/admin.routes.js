@@ -5,6 +5,6 @@ import roleGuard from "./../middlewares/roleGuard.middleware.js";
 
 const router = express.Router();
 
-router.route("/admin-test").get(auth, roleGuard("admin"));
+router.route("/admin-test").get(auth, roleGuard("admin"), );
 
 export default router;

@@ -14,6 +14,12 @@ import env from "./../config/env.js";
 import { hashToken, compareToken } from "./../utils/hash.util.js";
 
 export async function sendOtp(phone) {
+  
+  const user = await User.findOne({ phone });
+
+  if (user?.isBanned) {
+    throw new AppError("User is banned", 403);
+  }
   const otp = generateOtp();
 
   const hashedOtp = await bcrypt.hash(otp, 12);
@@ -41,7 +47,9 @@ export async function verifyOtp(phone, otp) {
   await redis.del(redisKey);
 
   let user = await User.findOne({ phone });
-
+  if (user?.isBanned) {
+    throw new AppError("User is banned", 403);
+  }
   if (!user) {
     const usersCount = await User.countDocuments();
 
@@ -80,6 +88,16 @@ export async function verifyOtp(phone, otp) {
 
 export async function refreshToken(refreshToken) {
   const payload = verifyRefreshToken(refreshToken);
+
+  const user = await User.findById(payload.userId);
+
+  if (!user) {
+    throw new AppError("User not found", 401);
+  }
+
+  if (user.isBanned) {
+    throw new AppError("User is banned", 403);
+  }
 
   const refreshKey = `auth:refresh:${payload.userId}`;
 
@@ -151,10 +169,8 @@ export async function completeProfile(userId, data) {
   return user;
 }
 
+export async function logout(userId) {
+  const refreshKey = `auth:refresh:${userId}`;
 
-export async function logout(userId){
-  
-  const refreshKey = `auth:refresh:${userId}`
-
-  await redis.del(refreshKey)
+  await redis.del(refreshKey);
 }

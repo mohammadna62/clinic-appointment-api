@@ -1,4 +1,4 @@
-import  AppError  from "./../errors/app-error.js";
+import AppError from "./../errors/app-error.js";
 
 const roleGuard = (...allowedRoles) => {
   return (req, res, next) => {
