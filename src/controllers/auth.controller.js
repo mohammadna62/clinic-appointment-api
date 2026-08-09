@@ -5,6 +5,7 @@ import {
   verifyOtp as verifyOtpService,
   refreshToken as refreshTokenService,
   completeProfile as completeProfileService,
+  logout as logoutService,
 } from "../services/auth.service.js";
 import User from "./../models/user.model.js";
 
@@ -97,6 +98,20 @@ export const completeProfile = async (req, res, next) => {
           user.firstName && user.lastName && user.nationalCode,
         ),
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    await logoutService(userId);
+
+    return successResponse(res, {
+      message: "Logged out successfully",
     });
   } catch (error) {
     next(error);

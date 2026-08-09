@@ -150,3 +150,11 @@ export async function completeProfile(userId, data) {
 
   return user;
 }
+
+
+export async function logout(userId){
+  
+  const refreshKey = `auth:refresh:${userId}`
+
+  await redis.del(refreshKey)
+}
