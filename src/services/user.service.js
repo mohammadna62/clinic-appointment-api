@@ -3,7 +3,6 @@ import AppError from "../errors/app-error.js";
 
 import { redis } from "./../config/redis.js";
 
-
 export async function banUser(userId) {
   const user = await User.findByIdAndUpdate(
     userId,
@@ -30,6 +29,42 @@ export async function unBanUser(userId) {
     },
     { new: true, runValidators: true },
   );
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+  return user;
+}
+
+export async function updateUser(userId, data) {
+  const { firstName, lastName, nationalCode } = data;
+
+  if (nationalCode !== undefined) {
+    const existingUser = await User.findOne({
+      nationalCode,
+      _id: { $ne: userId },
+    });
+
+    if (existingUser) {
+      throw new AppError("National code is already in use", 409);
+    }
+  }
+
+  const updateData = {};
+
+  if (firstName !== undefined) {
+    updateData.firstName = firstName;
+  }
+  if (lastName !== undefined) {
+    updateData.lastName = lastName;
+  }
+  if (nationalCode !== undefined) {
+    updateData.nationalCode = nationalCode;
+  }
+
+  const user = await User.findByIdAndUpdate(userId, updateData, {
+    new: true,
+    runValidators: true,
+  });
   if (!user) {
     throw new AppError("User not found", 404);
   }

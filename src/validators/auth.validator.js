@@ -30,3 +30,35 @@ export const completeProfileSchema = z.object({
     .string()
     .regex(/^\d{10}$/, " National code must be 10 digits"),
 }).strict();
+
+export const updateProfileSchema = z
+  .object({
+    firstName: z
+      .string()
+      .trim()
+      .min(2, "First name must be at least 2 characters")
+      .max(50, "First name is too long")
+      .optional(),
+
+    lastName: z
+      .string()
+      .trim()
+      .min(2, "Last name must be at least 2 characters")
+      .max(50, "Last name is too long")
+      .optional(),
+
+    nationalCode: z
+      .string()
+      .regex(/^\d{10}$/, "National code must be 10 digits")
+      .optional(),
+  })
+  .strict()
+  .refine(
+    (data) =>
+      data.firstName !== undefined ||
+      data.lastName !== undefined ||
+      data.nationalCode !== undefined,
+    {
+      message: "At least one profile field is required",
+    },
+  );
