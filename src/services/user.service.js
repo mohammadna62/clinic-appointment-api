@@ -3,6 +3,7 @@ import AppError from "../errors/app-error.js";
 
 import { redis } from "./../config/redis.js";
 
+
 export async function banUser(userId) {
   const user = await User.findByIdAndUpdate(
     userId,
@@ -69,4 +70,12 @@ export async function updateUser(userId, data) {
     throw new AppError("User not found", 404);
   }
   return user;
+}
+
+export function isProfileCompleted(user) {
+  return Boolean(
+    user.firstName &&
+    user.lastName &&
+    user.nationalCode
+  );
 }

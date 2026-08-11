@@ -8,6 +8,7 @@ import {
   logout as logoutService,
 } from "../services/auth.service.js";
 import User from "./../models/user.model.js";
+import { isProfileCompleted } from "./../services/user.service.js";
 
 export const sentOtp = async (req, res, next) => {
   try {
@@ -37,9 +38,7 @@ export const verifyOtp = async (req, res, next) => {
         user,
         accessToken,
         refreshToken,
-        profileCompleted: Boolean(
-          user.firstName && user.lastName && user.nationalCode,
-        ),
+        profileCompleted: isProfileCompleted(user),
       },
     });
   } catch (error) {
@@ -59,9 +58,7 @@ export const getMe = async (req, res, next) => {
       message: "User profile fetch successfully",
       data: {
         user,
-        profileCompleted: Boolean(
-          user.firstName && user.lastName && user.nationalCode,
-        ),
+        profileCompleted: isProfileCompleted(user),
       },
     });
   } catch (error) {
@@ -94,9 +91,7 @@ export const completeProfile = async (req, res, next) => {
       message: "Profile completed successfully",
       data: {
         user,
-        profileCompleted: Boolean(
-          user.firstName && user.lastName && user.nationalCode,
-        ),
+        profileCompleted:isProfileCompleted(user)
       },
     });
   } catch (error) {
