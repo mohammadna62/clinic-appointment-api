@@ -98,11 +98,9 @@ export async function refreshToken(refreshToken) {
   const payload = verifyRefreshToken(refreshToken);
 
   const user = await User.findById(payload.userId);
-
   if (!user) {
     throw new AppError("User not found", 401);
   }
-
   if (user.isDeleted) {
     throw new AppError("User account has been deleted", 403);
   }
@@ -110,7 +108,7 @@ export async function refreshToken(refreshToken) {
   if (user.isBanned) {
     throw new AppError("User is banned", 403);
   }
-
+  
   const refreshKey = `auth:refresh:${payload.userId}`;
 
   const hashedToken = await redis.get(refreshKey);
