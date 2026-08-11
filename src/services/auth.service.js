@@ -36,6 +36,14 @@ export async function sendOtp(phone) {
 }
 
 export async function verifyOtp(phone, otp) {
+  let user = await User.findOne({ phone });
+
+  if (user?.isDeleted) {
+    throw new AppError("User account has been deleted", 403);
+  }
+  if (user?.isBanned) {
+    throw new AppError("User is banned", 403);
+  }
   const redisKey = `auth:otp:${phone}`;
 
   const hashedOtp = await redis.get(redisKey);
@@ -49,15 +57,6 @@ export async function verifyOtp(phone, otp) {
     throw new AppError("Invalid OTP", 400);
   }
   await redis.del(redisKey);
-
-  let user = await User.findOne({ phone });
-
-  if (user?.isDeleted) {
-    throw new AppError("User account has been deleted", 403);
-  }
-  if (user?.isBanned) {
-    throw new AppError("User is banned", 403);
-  }
 
   if (!user) {
     const usersCount = await User.countDocuments();
