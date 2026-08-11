@@ -14,12 +14,16 @@ import env from "./../config/env.js";
 import { hashToken, compareToken } from "./../utils/hash.util.js";
 
 export async function sendOtp(phone) {
-  
   const user = await User.findOne({ phone });
+
+  if (user?.isDeleted) {
+    throw new AppError("User account has been deleted", 403);
+  }
 
   if (user?.isBanned) {
     throw new AppError("User is banned", 403);
   }
+
   const otp = generateOtp();
 
   const hashedOtp = await bcrypt.hash(otp, 12);
@@ -47,9 +51,14 @@ export async function verifyOtp(phone, otp) {
   await redis.del(redisKey);
 
   let user = await User.findOne({ phone });
+
+  if (user?.isDeleted) {
+    throw new AppError("User account has been deleted", 403);
+  }
   if (user?.isBanned) {
     throw new AppError("User is banned", 403);
   }
+
   if (!user) {
     const usersCount = await User.countDocuments();
 
@@ -93,6 +102,10 @@ export async function refreshToken(refreshToken) {
 
   if (!user) {
     throw new AppError("User not found", 401);
+  }
+
+  if (user.isDeleted) {
+    throw new AppError("User account has been deleted", 403);
   }
 
   if (user.isBanned) {
