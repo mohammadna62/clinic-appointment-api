@@ -96,3 +96,23 @@ export async function deleteUser(userId) {
 
   return user;
 }
+
+export async function getUsers(status) {
+  const filter = {};
+
+  if (status === "active") {
+    filter.isDeleted = false;
+    filter.isBanned = false;
+  } else if (status === "banned") {
+    filter.isDeleted = false;
+    filter.isBanned = true;
+  } else if (status === "deleted") {
+    filter.isDeleted = true;
+  } else if (status !== undefined) {
+    throw new AppError("Invalid user status", 400);
+  }
+
+  const users = await User.find(filter).sort({ createdAt: -1 });
+
+  return users;
+}

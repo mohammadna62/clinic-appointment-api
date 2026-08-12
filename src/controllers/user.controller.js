@@ -3,6 +3,7 @@ import {
   unBanUser as unBanUserService,
   updateUser as updateUserService,
   deleteUser as deleteUserService,
+  getUsers as getUsersService,
 } from "../services/user.service.js";
 
 import { successResponse } from "./../helpers/response.js";
@@ -52,19 +53,32 @@ export const updateUser = async (req, res, next) => {
   }
 };
 
-export const deleteUser = async (req , res,next)=>{
- try {
-  
-  const user = await deleteUserService(req.params.userId)
+export const deleteUser = async (req, res, next) => {
+  try {
+    const user = await deleteUserService(req.params.userId);
 
+    return successResponse(res, {
+      message: "User deleted successfully",
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-  return successResponse(res , {
-    message:"User deleted successfully",
-    data:{
-      user
-    }
-  })
- } catch (error) {
-  next(error)
- }
-}
+export const getUser = async (req, res, next) => {
+  try {
+    const users = await getUsersService(req.query.status);
+
+    return successResponse(res, {
+      message: "Users retrieved successfully",
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
