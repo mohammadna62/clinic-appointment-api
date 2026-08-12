@@ -16,10 +16,6 @@ import { hashToken, compareToken } from "./../utils/hash.util.js";
 export async function sendOtp(phone) {
   const user = await User.findOne({ phone });
 
-  if (user?.isDeleted) {
-    throw new AppError("User account has been deleted", 403);
-  }
-
   if (user?.isBanned) {
     throw new AppError("User is banned", 403);
   }
@@ -38,12 +34,10 @@ export async function sendOtp(phone) {
 export async function verifyOtp(phone, otp) {
   let user = await User.findOne({ phone });
 
-  if (user?.isDeleted) {
-    throw new AppError("User account has been deleted", 403);
-  }
   if (user?.isBanned) {
     throw new AppError("User is banned", 403);
   }
+
   const redisKey = `auth:otp:${phone}`;
 
   const hashedOtp = await redis.get(redisKey);
@@ -68,6 +62,12 @@ export async function verifyOtp(phone, otp) {
       role,
       isVerified: true,
     });
+  } else if (user.isDeleted) {
+    user.isDeleted = false;
+    user.deletedAt = null;
+    user.isVerified = true;
+
+    await user.save();
   }
   const payload = {
     userId: user._id,
@@ -101,14 +101,13 @@ export async function refreshToken(refreshToken) {
   if (!user) {
     throw new AppError("User not found", 401);
   }
+  if (user.isBanned) {
+    throw new AppError("User is banned", 403);
+  }
   if (user.isDeleted) {
     throw new AppError("User account has been deleted", 403);
   }
 
-  if (user.isBanned) {
-    throw new AppError("User is banned", 403);
-  }
-  
   const refreshKey = `auth:refresh:${payload.userId}`;
 
   const hashedToken = await redis.get(refreshKey);
