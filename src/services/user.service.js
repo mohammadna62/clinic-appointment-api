@@ -3,7 +3,6 @@ import AppError from "../errors/app-error.js";
 
 import { redis } from "./../config/redis.js";
 
-
 export async function banUser(userId) {
   const user = await User.findByIdAndUpdate(
     userId,
@@ -73,9 +72,27 @@ export async function updateUser(userId, data) {
 }
 
 export function isProfileCompleted(user) {
-  return Boolean(
-    user.firstName &&
-    user.lastName &&
-    user.nationalCode
-  );
+  return Boolean(user.firstName && user.lastName && user.nationalCode);
+}
+
+export async function deleteUser(userId) {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (user.isDeleted) {
+    throw new AppError("User account is already deleted", 409);
+  }
+  user.isDeleted = true;
+  user.deletedAt = new Date();
+
+  await user.save();
+
+  const refreshKey = `auth:refresh:${userId}`;
+
+  await redis.del(refreshKey);
+
+  return user;
 }
