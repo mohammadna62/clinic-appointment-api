@@ -55,11 +55,11 @@ export async function verifyOtp(phone, otp) {
   if (!user) {
     const usersCount = await User.countDocuments();
 
-    const role = usersCount === 0 ? "admin" : "patient";
+    const roles = usersCount === 0 ? ["admin"] : ["patient"];
 
     user = await User.create({
       phone,
-      role,
+      roles,
       isVerified: true,
     });
   } else if (user.isDeleted) {
@@ -71,7 +71,7 @@ export async function verifyOtp(phone, otp) {
   }
   const payload = {
     userId: user._id,
-    role: user.role,
+    roles: user.roles,
   };
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
@@ -124,7 +124,7 @@ export async function refreshToken(refreshToken) {
 
   const newPayload = {
     userId: payload.userId,
-    role: payload.role,
+    roles: user.roles,
   };
 
   const newAccessToken = generateAccessToken(newPayload);

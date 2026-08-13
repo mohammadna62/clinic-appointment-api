@@ -6,9 +6,15 @@ const roleGuard = (...allowedRoles) => {
       if (!req.user) {
         throw new AppError("Authentication required", 401);
       }
-      if (!allowedRoles.includes(req.user.role)) {
+
+      const hasAllowedRole = req.user.roles.some((role) =>
+        allowedRoles.includes(role),
+      );
+
+      if (!hasAllowedRole) {
         throw new AppError("Access denied", 403);
       }
+
       next();
     } catch (error) {
       next(error);
