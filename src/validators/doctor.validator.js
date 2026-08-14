@@ -1,3 +1,5 @@
+import z from "zod"
+
 export const createDoctorSchema = z.object({
   medicalCode: z
     .string()
@@ -8,8 +10,6 @@ export const createDoctorSchema = z.object({
     .string()
     .trim()
     .min(2, "Biography must be at least 2 characters")
-    .max(1000, "Biography  is too long"),
-  
-
-  
-})
+    .max(1000, "Biography  is too long")
+    .optional(),
+});

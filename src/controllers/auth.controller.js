@@ -33,6 +33,7 @@ export const verifyOtp = async (req, res, next) => {
     );
 
     return successResponse(res, {
+      statusCode: 201,
       message: "OTP verified successfully",
       data: {
         user,
@@ -91,7 +92,7 @@ export const completeProfile = async (req, res, next) => {
       message: "Profile completed successfully",
       data: {
         user,
-        profileCompleted:isProfileCompleted(user)
+        profileCompleted: isProfileCompleted(user),
       },
     });
   } catch (error) {
