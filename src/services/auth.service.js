@@ -147,6 +147,9 @@ export async function refreshToken(refreshToken) {
 }
 
 export async function completeProfile(userId, data) {
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Invalid user ID", 400);
+  }
   const { firstName, lastName, nationalCode } = data;
 
   const existingUser = await User.findOne({
@@ -179,6 +182,9 @@ export async function completeProfile(userId, data) {
 }
 
 export async function logout(userId) {
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Invalid user ID", 400);
+  }
   const refreshKey = `auth:refresh:${userId}`;
 
   await redis.del(refreshKey);

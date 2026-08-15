@@ -2,16 +2,19 @@ import { ZodError } from "zod";
 
 import AppError from "../errors/app-error.js";
 
-const validate = (schema) => {
+const validate = (schema, source = "body") => {
   return (req, res, next) => {
     try {
-      req.body = schema.parse(req.body);
+      req[source] = schema.parse(req[source]);
 
       next();
     } catch (error) {
       if (error instanceof ZodError) {
         return next(
-          new AppError(error.issues.map((e) => e.message).join(", "), 400),
+          new AppError(
+            error.issues.map((e) => e.message).join(", "),
+            400,
+          ),
         );
       }
 

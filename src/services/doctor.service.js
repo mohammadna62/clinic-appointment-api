@@ -5,8 +5,20 @@ import Specialty from "./../models/specialty.model.js";
 import AppError from "./../errors/app-error.js";
 
 export async function createDoctor(userId, data) {
+   
   const { clinic, specialty, medicalCode, bio } = data;
 
+   if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Invalid user ID", 400);
+  }
+
+  if (!mongoose.isValidObjectId(clinic)) {
+    throw new AppError("Invalid clinic ID", 400);
+  }
+
+  if (!mongoose.isValidObjectId(specialty)) {
+    throw new AppError("Invalid specialty ID", 400);
+  }
   const user = await User.findById(userId);
 
   if (!user) {

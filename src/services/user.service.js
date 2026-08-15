@@ -1,9 +1,13 @@
+import mongoose from "mongoose";
 import User from "./../models/user.model.js";
 import AppError from "../errors/app-error.js";
 
 import { redis } from "./../config/redis.js";
 
 export async function banUser(userId) {
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Invalid user ID", 400);
+  }
   const user = await User.findByIdAndUpdate(
     userId,
     { isBanned: true },
@@ -22,6 +26,9 @@ export async function banUser(userId) {
 }
 
 export async function unBanUser(userId) {
+  if (!mongoose.isValidObjectId(userId)) {
+    throw new AppError("Invalid user ID", 400);
+  }
   const user = await User.findByIdAndUpdate(
     userId,
     {
@@ -36,6 +43,9 @@ export async function unBanUser(userId) {
 }
 
 export async function updateUser(userId, data) {
+  if (!mongoose.isValidObjectId(userId)) {
+  throw new AppError("Invalid user ID", 400);
+}
   const { firstName, lastName, nationalCode } = data;
 
   if (nationalCode !== undefined) {
@@ -76,6 +86,9 @@ export function isProfileCompleted(user) {
 }
 
 export async function deleteUser(userId) {
+  if (!mongoose.isValidObjectId(userId)) {
+  throw new AppError("Invalid user ID", 400);
+}
   const user = await User.findById(userId);
 
   if (!user) {
