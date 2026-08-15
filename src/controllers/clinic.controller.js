@@ -9,7 +9,7 @@ export const createClinic = async (req, res, next) => {
     const clinic = await createClinicService(req.body);
 
     return successResponse(res, {
-       statusCode: 201,
+      statusCode: 201,
       message: "Clinic created successfully",
       data: {
         clinic,
@@ -22,13 +22,13 @@ export const createClinic = async (req, res, next) => {
 
 export const getClinics = async (req, res, next) => {
   try {
-    const clinics = await getClinicsService();
+    const { page, limit } = req.validated.query;
+
+    const result = await getClinicsService(page, limit);
 
     return successResponse(res, {
       message: "Clinics retrieved successfully",
-      data: {
-        clinics,
-      },
+      data: result,
     });
   } catch (error) {
     next(error);

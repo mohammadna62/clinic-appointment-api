@@ -5,7 +5,12 @@ import AppError from "../errors/app-error.js";
 const validate = (schema, source = "body") => {
   return (req, res, next) => {
     try {
-      req[source] = schema.parse(req[source]);
+      const validatedData = schema.parse(req[source]);
+
+      req.validated = {
+        ...req.validated,
+        [source]: validatedData,
+      };
 
       next();
     } catch (error) {
