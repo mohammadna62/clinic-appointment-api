@@ -12,7 +12,7 @@ import { updateProfileSchema } from "./../validators/auth.validator.js";
 
 const router = express.Router();
 
-router.route("/profile").patch(auth, validate(updateProfileSchema), updateUser);
+router.route("/profile").patch(auth, validate(updateProfileSchema, "body"), updateUser);
 router.route("/:userId/ban").post(auth, roleGuard("admin"), banUser);
 router.route("/:userId/un-ban").post(auth, roleGuard("admin"), unBanUser);
 

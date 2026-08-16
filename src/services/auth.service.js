@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-
+import  mongoose  from "mongoose";
 import User from "./../models/user.model.js";
 import AppError from "./../errors/app-error.js";
 import { generateOtp } from "../utils/otp.util.js";

@@ -12,7 +12,7 @@ import { isProfileCompleted } from "./../services/user.service.js";
 
 export const sentOtp = async (req, res, next) => {
   try {
-    const { phone } = req.body;
+    const { phone } = req.validated.body;
 
     await sendOtp(phone);
 
@@ -25,7 +25,7 @@ export const sentOtp = async (req, res, next) => {
 };
 export const verifyOtp = async (req, res, next) => {
   try {
-    const { phone, otp } = req.body;
+    const { phone, otp } = req.validated.body;
 
     const { user, refreshToken, accessToken } = await verifyOtpService(
       phone,
@@ -69,7 +69,7 @@ export const getMe = async (req, res, next) => {
 
 export const refreshToken = async (req, res, next) => {
   try {
-    const { refreshToken } = req.body;
+    const { refreshToken } = req.validated.body;
 
     const tokens = await refreshTokenService(refreshToken);
 
@@ -86,7 +86,7 @@ export const completeProfile = async (req, res, next) => {
   try {
     const userId = req.user.userId;
 
-    const user = await completeProfileService(userId, req.body);
+    const user = await completeProfileService(userId,  req.validated.body);
 
     return successResponse(res, {
       message: "Profile completed successfully",

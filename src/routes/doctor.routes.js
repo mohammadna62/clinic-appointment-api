@@ -10,6 +10,6 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(auth, roleGuard("patient"), validate(createDoctorSchema), createDoctor);
+  .post(auth, roleGuard("patient"), validate(createDoctorSchema, "body"), createDoctor);
 
 export default router;

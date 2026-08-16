@@ -40,7 +40,7 @@ export const unBanUser = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   try {
-    const user = await updateUserService(req.user.userId, req.body);
+    const user = await updateUserService(req.user.userId,  req.validated.body);
 
     return successResponse(res, {
       message: "User profile updated successfully",

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Doctor from "./../models/doctor.model.js";
 import User from "./../models/user.model.js";
 import Clinic from "./../models/clinic.model.js";

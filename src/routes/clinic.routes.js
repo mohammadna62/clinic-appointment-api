@@ -13,7 +13,7 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(auth, roleGuard("admin"), validate(createClinicSchema), createClinic)
+  .post(auth, roleGuard("admin"), validate(createClinicSchema, "body"), createClinic)
   .get(auth, roleGuard("admin"),validate(paginationSchema,"query"), getClinics);
 
 export default router;

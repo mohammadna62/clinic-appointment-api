@@ -6,7 +6,7 @@ import {
 
 export const createClinic = async (req, res, next) => {
   try {
-    const clinic = await createClinicService(req.body);
+    const clinic = await createClinicService(req.validated.body);
 
     return successResponse(res, {
       statusCode: 201,

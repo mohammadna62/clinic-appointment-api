@@ -3,7 +3,7 @@ import { successResponse } from "../helpers/response.js";
 
 export const createDoctor = async (req, res, next) => {
   try {
-    const doctor = await createDoctorService(req.user.userId, req.body);
+    const doctor = await createDoctorService(req.user.userId, req.validated.body);
     return successResponse(res, {
        statusCode: 201,
       message: "Doctor application submitted successfully",
