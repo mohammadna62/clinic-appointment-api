@@ -40,7 +40,7 @@ export const unBanUser = async (req, res, next) => {
 
 export const updateUser = async (req, res, next) => {
   try {
-    const user = await updateUserService(req.user.userId,  req.validated.body);
+    const user = await updateUserService(req.user.userId, req.validated.body);
 
     return successResponse(res, {
       message: "User profile updated successfully",
@@ -70,13 +70,13 @@ export const deleteUser = async (req, res, next) => {
 
 export const getUser = async (req, res, next) => {
   try {
-    const users = await getUsersService(req.query.status);
+    const { status, page, limit } = req.validated.query;
+
+    const result = await getUsersService( status, page, limit );
 
     return successResponse(res, {
       message: "Users retrieved successfully",
-      data: {
-        users,
-      },
+      data: result,
     });
   } catch (error) {
     next(error);

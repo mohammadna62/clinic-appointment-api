@@ -4,6 +4,8 @@ import AppError from "../errors/app-error.js";
 
 import { redis } from "./../config/redis.js";
 
+import { createPaginationData } from "../utils/pagination.util.js";
+
 export async function banUser(userId) {
   if (!mongoose.isValidObjectId(userId)) {
     throw new AppError("Invalid user ID", 400);
@@ -44,8 +46,8 @@ export async function unBanUser(userId) {
 
 export async function updateUser(userId, data) {
   if (!mongoose.isValidObjectId(userId)) {
-  throw new AppError("Invalid user ID", 400);
-}
+    throw new AppError("Invalid user ID", 400);
+  }
   const { firstName, lastName, nationalCode } = data;
 
   if (nationalCode !== undefined) {
@@ -87,8 +89,8 @@ export function isProfileCompleted(user) {
 
 export async function deleteUser(userId) {
   if (!mongoose.isValidObjectId(userId)) {
-  throw new AppError("Invalid user ID", 400);
-}
+    throw new AppError("Invalid user ID", 400);
+  }
   const user = await User.findById(userId);
 
   if (!user) {
@@ -110,14 +112,13 @@ export async function deleteUser(userId) {
   return user;
 }
 
-export async function getUsers(status) {
+export async function getUsers(status, page, limit) {
   const filter = {};
 
   if (status === "active") {
     filter.isDeleted = false;
     filter.isBanned = false;
   } else if (status === "banned") {
-    filter.isDeleted = false;
     filter.isBanned = true;
   } else if (status === "deleted") {
     filter.isDeleted = true;
@@ -125,7 +126,18 @@ export async function getUsers(status) {
     throw new AppError("Invalid user status", 400);
   }
 
-  const users = await User.find(filter).sort({ createdAt: -1 });
+  const skip = (page - 1) * limit;
 
-  return users;
+  const [users, total] = await Promise.all([
+    User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+
+    User.countDocuments(filter),
+  ]);
+
+  const pagination = createPaginationData(page, limit, total);
+
+  return {
+    users,
+    pagination,
+  };
 }
