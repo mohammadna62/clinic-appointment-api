@@ -1,15 +1,13 @@
-import z from "zod"
+import { z } from "zod";
 
-export const createDoctorSchema = z.object({
-  medicalCode: z
-    .string()
-    .trim()
-    .min(2, "Medical Code  must be at least 2 characters")
-    .max(10, "Medical Code  is too long"),
-  bio: z
-    .string()
-    .trim()
-    .min(2, "Biography must be at least 2 characters")
-    .max(1000, "Biography  is too long")
-    .optional(),
-});
+export const createDoctorSchema = z
+  .object({
+    clinic: z.string().min(1, "Clinic ID is required"),
+
+    specialty: z.string().min(1, "Specialty ID is required"),
+
+    medicalCode: z.string().trim().min(1, "Medical code is required"),
+
+    bio: z.string().trim().max(1000).optional(),
+  })
+  .strict();

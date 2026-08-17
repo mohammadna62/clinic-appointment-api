@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-
 const doctorSchema = new mongoose.Schema(
   {
     user: {
@@ -29,6 +28,11 @@ const doctorSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+    profileImage: {
+      type: String,
+      default: null,
+      trim: true,
     },
     isActive: {
       type: Boolean,

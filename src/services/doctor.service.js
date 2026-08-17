@@ -5,11 +5,10 @@ import Clinic from "./../models/clinic.model.js";
 import Specialty from "./../models/specialty.model.js";
 import AppError from "./../errors/app-error.js";
 
-export async function createDoctor(userId, data) {
-   
+export async function createDoctor(userId, data, file) {
   const { clinic, specialty, medicalCode, bio } = data;
 
-   if (!mongoose.isValidObjectId(userId)) {
+  if (!mongoose.isValidObjectId(userId)) {
     throw new AppError("Invalid user ID", 400);
   }
 
@@ -57,13 +56,14 @@ export async function createDoctor(userId, data) {
   if (existingMedicalCode) {
     throw new AppError("Medical code is already in use", 409);
   }
-
+  const profileImage = file ? `/uploads/doctors/${file.filename}` : null;
   const doctor = await Doctor.create({
     user: userId,
     clinic,
     specialty,
     medicalCode,
     bio,
+    profileImage,
     isActive: false,
   });
 

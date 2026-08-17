@@ -6,6 +6,8 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import errorHandler from "./middlewares/error-handler.js";
 import AppError from "./errors/app-error.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
@@ -16,6 +18,8 @@ import doctorRoutes from "./routes/doctor.routes.js";
 
 const app = express();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 /*
 |--------------------------------------------------------------------------
 | Global Middlewares
@@ -36,6 +40,11 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(cookieParser());
 
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../public/uploads")),
+);
+
 /*
 |--------------------------------------------------------------------------
 | Routes
@@ -47,7 +56,7 @@ app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/admin/clinics", clinicRoutes);
 app.use("/api/v1/admin/specialties", specialtyRoutes);
-app.use("/api/v1/doctor", doctorRoutes);
+app.use("/api/v1/doctors", doctorRoutes);
 
 /*
 |--------------------------------------------------------------------------

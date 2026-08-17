@@ -3,13 +3,20 @@ import auth from "./../middlewares/auth.middleware.js";
 import roleGuard from "./../middlewares/roleGuard.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 import { createDoctor } from "../controllers/doctor.controller.js";
-import {createDoctorSchema} from "./../validators/doctor.validator.js"
+import { createDoctorSchema } from "./../validators/doctor.validator.js";
+import upload from "./../middlewares/upload.middleware.js";
 
 
 const router = express.Router();
 
 router
   .route("/")
-  .post(auth, roleGuard("patient"), validate(createDoctorSchema, "body"), createDoctor);
+  .post(
+    auth,
+    roleGuard("patient"),
+    upload.single("profileImage"),
+    validate(createDoctorSchema, "body"),
+    createDoctor,
+  );
 
 export default router;
