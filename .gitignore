@@ -73,4 +73,7 @@ temp/
 # ==========================
 # Uploaded files
 # ==========================
-/public/uploads/
+/public/uploads/*
+!/public/uploads/
+!/public/uploads/doctors/
+!/public/uploads/doctors/.gitkeep

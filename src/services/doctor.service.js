@@ -12,13 +12,6 @@ export async function createDoctor(userId, data, file) {
     throw new AppError("Invalid user ID", 400);
   }
 
-  if (!mongoose.isValidObjectId(clinic)) {
-    throw new AppError("Invalid clinic ID", 400);
-  }
-
-  if (!mongoose.isValidObjectId(specialty)) {
-    throw new AppError("Invalid specialty ID", 400);
-  }
   const user = await User.findById(userId);
 
   if (!user) {

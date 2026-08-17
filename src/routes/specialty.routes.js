@@ -10,7 +10,10 @@ import {
   getSpecialtyById,
 } from "../controllers/specialty.controller.js";
 
-import { createSpecialtySchema } from "../validators/specialty.validator.js";
+import {
+  createSpecialtySchema,
+  specialtyIdSchema,
+} from "../validators/specialty.validator.js";
 
 import { paginationSchema } from "../validators/pagination.validator.js";
 
@@ -36,6 +39,7 @@ router
   .get(
     auth,
     roleGuard("admin"),
+    validate(specialtyIdSchema, "params"),
     getSpecialtyById,
   );
 

@@ -5,7 +5,7 @@ import {
 } from "./../services/specialty.service.js";
 
 import { successResponse } from "./../helpers/response.js";
-import { success } from "zod";
+
 
 export const createSpecialty = async (req, res, next) => {
   try {
@@ -40,7 +40,9 @@ export const getSpecialties = async (req, res, next) => {
 
 export const getSpecialtyById = async (req, res, next) => {
   try {
-    const specialty = await getSpecialtyByIdService(req.params.specialtyId);
+    const specialty = await getSpecialtyByIdService(
+      req.validated.params.specialtyId,
+    );
 
     return successResponse(res, {
       message: "Specialty retrieved successfully",

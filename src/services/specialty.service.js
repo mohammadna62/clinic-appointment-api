@@ -1,7 +1,6 @@
 import Specialty from "./../models/specialty.model.js";
 import AppError from "./../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
-import mongoose from "mongoose";
 
 export async function createSpecialty(data) {
   const { name, description } = data;
@@ -36,9 +35,6 @@ export async function getSpecialties(page, limit) {
 }
 
 export async function getSpecialtyById(specialtyId) {
-  if (!mongoose.isValidObjectId(specialtyId)) {
-    throw new AppError("Invalid specialty ID", 400);
-  }
   const specialty = await Specialty.findById(specialtyId);
 
   if (!specialty) {

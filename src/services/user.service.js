@@ -7,9 +7,6 @@ import { redis } from "./../config/redis.js";
 import { createPaginationData } from "../utils/pagination.util.js";
 
 export async function banUser(userId) {
-  if (!mongoose.isValidObjectId(userId)) {
-    throw new AppError("Invalid user ID", 400);
-  }
   const user = await User.findByIdAndUpdate(
     userId,
     { isBanned: true },
@@ -28,9 +25,6 @@ export async function banUser(userId) {
 }
 
 export async function unBanUser(userId) {
-  if (!mongoose.isValidObjectId(userId)) {
-    throw new AppError("Invalid user ID", 400);
-  }
   const user = await User.findByIdAndUpdate(
     userId,
     {
@@ -88,9 +82,6 @@ export function isProfileCompleted(user) {
 }
 
 export async function deleteUser(userId) {
-  if (!mongoose.isValidObjectId(userId)) {
-    throw new AppError("Invalid user ID", 400);
-  }
   const user = await User.findById(userId);
 
   if (!user) {

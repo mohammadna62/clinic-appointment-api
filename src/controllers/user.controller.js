@@ -10,7 +10,7 @@ import { successResponse } from "./../helpers/response.js";
 
 export const banUser = async (req, res, next) => {
   try {
-    const user = await banUserService(req.params.userId);
+    const user = await banUserService(req.validated.params.userId);
 
     return successResponse(res, {
       message: "User banned successfully",
@@ -25,7 +25,7 @@ export const banUser = async (req, res, next) => {
 
 export const unBanUser = async (req, res, next) => {
   try {
-    const user = await unBanUserService(req.params.userId);
+    const user = await unBanUserService(req.validated.params.userId);
 
     return successResponse(res, {
       message: "User unbanned successfully",
@@ -55,7 +55,7 @@ export const updateUser = async (req, res, next) => {
 
 export const deleteUser = async (req, res, next) => {
   try {
-    const user = await deleteUserService(req.params.userId);
+    const user = await deleteUserService(req.validated.params.userId);
 
     return successResponse(res, {
       message: "User deleted successfully",
@@ -72,7 +72,7 @@ export const getUser = async (req, res, next) => {
   try {
     const { status, page, limit } = req.validated.query;
 
-    const result = await getUsersService( status, page, limit );
+    const result = await getUsersService(status, page, limit);
 
     return successResponse(res, {
       message: "Users retrieved successfully",
