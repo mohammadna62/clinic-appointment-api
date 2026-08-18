@@ -9,6 +9,16 @@ export const createSpecialtySchema = z
   })
   .strict();
 
+export const updateSpecialtySchema = z
+  .object({
+    name: z.string().trim().min(2).max(100).optional(),
+
+    description: z.string().trim().max(500).optional(),
+
+    isActive: z.boolean().optional(),
+  })
+  .strict();
+
 export const specialtyIdSchema = z
   .object({
     specialtyId: z.string().refine(

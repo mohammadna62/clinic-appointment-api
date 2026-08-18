@@ -8,11 +8,13 @@ import {
   createSpecialty,
   getSpecialties,
   getSpecialtyById,
+  updateSpecialty,
 } from "../controllers/specialty.controller.js";
 
 import {
   createSpecialtySchema,
   specialtyIdSchema,
+  updateSpecialtySchema,
 } from "../validators/specialty.validator.js";
 
 import { paginationSchema } from "../validators/pagination.validator.js";
@@ -41,6 +43,13 @@ router
     roleGuard("admin"),
     validate(specialtyIdSchema, "params"),
     getSpecialtyById,
+  )
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(specialtyIdSchema, "params"),
+    validate(updateSpecialtySchema, "body"),
+    updateSpecialty,
   );
 
 export default router;

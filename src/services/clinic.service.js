@@ -46,6 +46,19 @@ export async function getClinicById(clinicId) {
 }
 
 export async function updateClinic(clinicId, data) {
+  
+  const { name } = data;
+
+  if (name !== undefined) {
+    const existingClinic = await Clinic.findOne({
+      name,
+      _id: { $ne: clinicId },
+    });
+
+    if (existingClinic) {
+      throw new AppError("Clinic already exists", 409);
+    }
+  }
   const updateData = {};
 
   if (data.name !== undefined) {
@@ -56,11 +69,10 @@ export async function updateClinic(clinicId, data) {
     updateData.description = data.description;
   }
 
-  const clinic = await Clinic.findByIdAndUpdate(
-    clinicId,
-    updateData,
-    { new: true, runValidators: true },
-  );
+  const clinic = await Clinic.findByIdAndUpdate(clinicId, updateData, {
+    new: true,
+    runValidators: true,
+  });
 
   if (!clinic) {
     throw new AppError("Clinic not found", 404);

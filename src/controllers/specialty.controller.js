@@ -2,10 +2,10 @@ import {
   createSpecialty as createSpecialtyService,
   getSpecialties as getSpecialtiesService,
   getSpecialtyById as getSpecialtyByIdService,
+  updateSpecialty as updateSpecialtyService,
 } from "./../services/specialty.service.js";
 
 import { successResponse } from "./../helpers/response.js";
-
 
 export const createSpecialty = async (req, res, next) => {
   try {
@@ -46,6 +46,24 @@ export const getSpecialtyById = async (req, res, next) => {
 
     return successResponse(res, {
       message: "Specialty retrieved successfully",
+      data: {
+        specialty,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSpecialty = async (req, res, next) => {
+  try {
+    const specialty = await updateSpecialtyService(
+      req.validated.params.specialtyId,
+      req.validated.body,
+    );
+
+    return successResponse(res, {
+      message: "Specialty updated successfully",
       data: {
         specialty,
       },

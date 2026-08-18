@@ -43,3 +43,47 @@ export async function getSpecialtyById(specialtyId) {
 
   return specialty;
 }
+
+export async function updateSpecialty(specialtyId, data) {
+  const { name, description, isActive } = data;
+
+  if (name !== undefined) {
+    const existingSpecialty = await Specialty.findOne({
+      name,
+      _id: { $ne: specialtyId },
+    });
+
+    if (existingSpecialty) {
+      throw new AppError("Specialty already exists", 409);
+    }
+  }
+
+  const updateData = {};
+
+  if (name !== undefined) {
+    updateData.name = name;
+  }
+
+  if (description !== undefined) {
+    updateData.description = description;
+  }
+
+  if (isActive !== undefined) {
+    updateData.isActive = isActive;
+  }
+
+  const specialty = await Specialty.findByIdAndUpdate(
+    specialtyId,
+    updateData,
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!specialty) {
+    throw new AppError("Specialty not found", 404);
+  }
+
+  return specialty;
+}
