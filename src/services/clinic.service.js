@@ -22,22 +22,61 @@ export async function getClinics(page, limit) {
   const skip = (page - 1) * limit;
 
   const [clinics, totalCount] = await Promise.all([
-    Clinic.find()
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit),
+    Clinic.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
 
     Clinic.countDocuments(),
   ]);
 
-  const pagination = createPaginationData(
-    page,
-    limit,
-    totalCount,
-  );
+  const pagination = createPaginationData(page, limit, totalCount);
 
   return {
     clinics,
     pagination,
   };
+}
+
+export async function getClinicById(clinicId) {
+  const clinic = await Clinic.findById(clinicId);
+
+  if (!clinic) {
+    throw new AppError("Clinic not found", 404);
+  }
+
+  return clinic;
+}
+
+export async function updateClinic(clinicId, data) {
+  const updateData = {};
+
+  if (data.name !== undefined) {
+    updateData.name = data.name;
+  }
+
+  if (data.description !== undefined) {
+    updateData.description = data.description;
+  }
+
+  const clinic = await Clinic.findByIdAndUpdate(
+    clinicId,
+    updateData,
+    { new: true, runValidators: true },
+  );
+
+  if (!clinic) {
+    throw new AppError("Clinic not found", 404);
+  }
+
+  return clinic;
+}
+
+export async function updateClinicStatus(clinicId, isActive) {
+  const clinic = await Clinic.findByIdAndUpdate(
+    clinicId,
+    { isActive },
+    { new: true, runValidators: true },
+  );
+  if (!clinic) {
+    throw new AppError("Clinic not found", 404);
+  }
+  return clinic;
 }
