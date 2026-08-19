@@ -7,6 +7,10 @@ import {
   getUsersQuerySchema,
   userIdSchema,
 } from "./../validators/user.validator.js";
+import { doctorIdSchema,updateDoctorStatusSchema } from "../validators/doctor.validator.js";
+import { updateDoctorStatus } from "../controllers/doctor.controller.js";
+
+
 
 const router = express.Router();
 
@@ -26,5 +30,13 @@ router
     validate(userIdSchema, "params"),
     deleteUser,
   );
-
+router
+  .route("/doctors/:doctorId/status")
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(doctorIdSchema, "params"),
+    validate(updateDoctorStatusSchema, "body"),
+    updateDoctorStatus,
+  );
 export default router;
