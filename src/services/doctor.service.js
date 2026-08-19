@@ -157,11 +157,22 @@ export async function updateDoctorStatus(doctorId, data) {
       new: true,
       runValidators: true,
     },
-  );
+  ).populate("user", "firstName lastName roles");
 
   if (!doctor) {
     throw new AppError("Doctor not found", 404);
   }
+
+  if (doctor.isActive) {
+    await User.updateOne(
+      { _id: doctor.user },
+      { $addToSet: { roles: "doctor" } },
+    );
+  } else {
+    await User.updateOne({ _id: doctor.user }, { $pull: { roles: "doctor" } });
+  }
+
+  await doctor.populate("user", "firstName lastName roles");
 
   return doctor;
 }
