@@ -43,7 +43,7 @@ router
   .route("/:doctorId")
   .get(
     auth,
-    roleGuard("doctor"),
+    roleGuard("patient", "doctor", "admin"),
     validate(doctorIdSchema, "params"),
     getDoctorById,
   );

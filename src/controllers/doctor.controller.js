@@ -29,7 +29,7 @@ export const getDoctorById = async (req, res, next) => {
   try {
     const doctor = await getDoctorByIdService(req.validated.params.doctorId);
 
-    return successResponse(req, {
+    return successResponse(res, {
       message: "Doctor retrieved successfully",
       data: {
         doctor,

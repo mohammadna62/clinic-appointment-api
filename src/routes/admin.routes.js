@@ -39,4 +39,5 @@ router
     validate(updateDoctorStatusSchema, "body"),
     updateDoctorStatus,
   );
+  
 export default router;
