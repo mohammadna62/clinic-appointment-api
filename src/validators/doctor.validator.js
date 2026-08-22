@@ -34,10 +34,27 @@ export const updateDoctorSchema = z
 
     bio: z.string().trim().max(1000).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (data) =>
+      data.clinic !== undefined ||
+      data.specialty !== undefined ||
+      data.medicalCode !== undefined ||
+      data.bio !== undefined,
+    {
+      message: "At least one doctor field is required",
+    },
+  );
 
 export const updateDoctorStatusSchema = z
   .object({
     isActive: z.boolean(),
   })
   .strict();
+  export const getDoctorsQuerySchema = z.object({
+  status: z.enum(["active", "inactive"]).optional(),
+
+  page: z.coerce.number().int().min(1).default(1),
+
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+});

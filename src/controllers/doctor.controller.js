@@ -2,8 +2,11 @@ import {
   createDoctor as createDoctorService,
   getDoctorById as getDoctorByIdService,
   updateDoctor as updateDoctorService,
-  updateDoctorStatus as updateDoctorStatusService
+  updateDoctorByAdmin as updateDoctorByAdminService,
+  updateDoctorStatus as updateDoctorStatusService,
+  getDoctors as getDoctorsService,
 } from "./../services/doctor.service.js";
+
 import { successResponse } from "../helpers/response.js";
 
 export const createDoctor = async (req, res, next) => {
@@ -58,6 +61,26 @@ export const updateDoctor = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateDoctorByAdmin = async (req, res, next) => {
+  try {
+    const doctor = await updateDoctorByAdminService(
+      req.validated.params.doctorId,
+      req.validated.body,
+      req.file,
+    );
+
+    return successResponse(res, {
+      message: "Doctor profile updated successfully",
+      data: {
+        doctor,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateDoctorStatus = async (req, res, next) => {
   try {
     const doctor = await updateDoctorStatusService(
@@ -66,10 +89,25 @@ export const updateDoctorStatus = async (req, res, next) => {
     );
 
     return successResponse(res, {
-      message: "Doctor profile updated successfully",
+      message: "Doctor status updated successfully",
       data: {
         doctor,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDoctors = async (req, res, next) => {
+  try {
+    const { status, page, limit } = req.validated.query;
+
+    const result = await getDoctorsService(status, page, limit);
+
+    return successResponse(res, {
+      message: "Doctors retrieved successfully",
+      data: result,
     });
   } catch (error) {
     next(error);
