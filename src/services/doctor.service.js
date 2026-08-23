@@ -4,6 +4,7 @@ import Clinic from "./../models/clinic.model.js";
 import Specialty from "./../models/specialty.model.js";
 import AppError from "./../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
+import { deleteUploadedFile } from "./../utils/file.util.js";
 
 export async function createDoctor(userId, data, file) {
   const { clinic, specialty, medicalCode, bio } = data;
@@ -91,6 +92,16 @@ export async function updateDoctor(userId, data, file) {
     throw new AppError("Doctor profile not found", 404);
   }
 
+  if (
+    clinic === undefined &&
+    specialty === undefined &&
+    medicalCode === undefined &&
+    bio === undefined &&
+    !file
+  ) {
+    throw new AppError("No changes provided", 400);
+  }
+
   if (clinic !== undefined) {
     const clinicExists = await Clinic.findById(clinic);
 
@@ -126,6 +137,8 @@ export async function updateDoctor(userId, data, file) {
     }
   }
 
+  const oldProfileImage = doctor.profileImage;
+
   if (clinic !== undefined) {
     doctor.clinic = clinic;
   }
@@ -147,6 +160,10 @@ export async function updateDoctor(userId, data, file) {
   }
 
   await doctor.save();
+
+  if (file && oldProfileImage) {
+    await deleteUploadedFile(oldProfileImage);
+  }
 
   return doctor;
 }
@@ -192,8 +209,20 @@ export async function updateDoctorByAdmin(doctorId, data, file) {
 
   const doctor = await Doctor.findById(doctorId);
 
+  const oldProfileImage = doctor.profileImage;
+
   if (!doctor) {
     throw new AppError("Doctor not found", 404);
+  }
+
+  if (
+    clinic === undefined &&
+    specialty === undefined &&
+    medicalCode === undefined &&
+    bio === undefined &&
+    !file
+  ) {
+    throw new AppError("No changes provided", 400);
   }
 
   if (clinic !== undefined) {
@@ -247,6 +276,10 @@ export async function updateDoctorByAdmin(doctorId, data, file) {
 
   await doctor.save();
 
+  if (file && oldProfileImage) {
+    await deleteUploadedFile(oldProfileImage);
+  }
+
   return doctor;
 }
 
@@ -273,11 +306,7 @@ export async function getDoctors(status, page, limit) {
     Doctor.countDocuments(filter),
   ]);
 
-  const pagination = createPaginationData(
-    page,
-    limit,
-    total,
-  );
+  const pagination = createPaginationData(page, limit, total);
 
   return {
     doctors,
