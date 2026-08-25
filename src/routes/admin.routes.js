@@ -19,6 +19,18 @@ import {
   updateDoctorStatus,
 } from "../controllers/doctor.controller.js";
 
+import {
+  createClinicTimePolicy,
+  getClinicTimePolicy,
+  updateClinicTimePolicy,
+} from "../controllers/clinic-time-policy.controller.js";
+
+import {
+  clinicTimePolicyClinicIdSchema,
+  createClinicTimePolicySchema,
+  updateClinicTimePolicySchema,
+} from "../validators/clinic-time-policy.validator.js";
+
 import upload from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
@@ -39,7 +51,7 @@ router
     validate(userIdSchema, "params"),
     deleteUser,
   );
-  router
+router
   .route("/doctors")
   .get(
     auth,
@@ -56,7 +68,7 @@ router
     validate(updateDoctorStatusSchema, "body"),
     updateDoctorStatus,
   );
-  router
+router
   .route("/doctors/:doctorId")
   .patch(
     auth,
@@ -66,5 +78,27 @@ router
     validate(updateDoctorSchema, "body"),
     updateDoctorByAdmin,
   );
-  
+router
+  .route("/clinics/:clinicId/time-policy")
+  .post(
+    auth,
+    roleGuard("admin"),
+    validate(clinicTimePolicyClinicIdSchema, "params"),
+    validate(createClinicTimePolicySchema, "body"),
+    createClinicTimePolicy,
+  )
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(clinicTimePolicyClinicIdSchema, "params"),
+    getClinicTimePolicy,
+  )
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(clinicTimePolicyClinicIdSchema, "params"),
+    validate(updateClinicTimePolicySchema, "body"),
+    updateClinicTimePolicy,
+  );
+
 export default router;
