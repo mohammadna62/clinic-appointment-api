@@ -31,6 +31,20 @@ import {
   updateClinicTimePolicySchema,
 } from "../validators/clinic-time-policy.validator.js";
 
+import {
+  createWeeklySchedule,
+  getWeeklySchedules,
+  updateWeeklySchedule,
+  deleteWeeklySchedule,
+} from "../controllers/weekly-schedule.controller.js";
+
+import {
+  weeklyScheduleClinicIdSchema,
+  weeklyScheduleIdSchema,
+  createWeeklyScheduleSchema,
+  updateWeeklyScheduleSchema,
+} from "../validators/weekly-schedule.validator.js";
+
 import upload from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
@@ -101,4 +115,35 @@ router
     updateClinicTimePolicy,
   );
 
+router
+  .route("/clinics/:clinicId/weekly-schedule")
+  .post(
+    auth,
+    roleGuard("admin"),
+    validate(weeklyScheduleClinicIdSchema, "params"),
+    validate(createWeeklyScheduleSchema, "body"),
+    createWeeklySchedule,
+  )
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(weeklyScheduleClinicIdSchema, "params"),
+    getWeeklySchedules,
+  );
+
+router
+  .route("/clinics/:clinicId/weekly-schedule/:scheduleId")
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(weeklyScheduleIdSchema, "params"),
+    validate(updateWeeklyScheduleSchema, "body"),
+    updateWeeklySchedule,
+  )
+  .delete(
+    auth,
+    roleGuard("admin"),
+    validate(weeklyScheduleIdSchema, "params"),
+    deleteWeeklySchedule,
+  );
 export default router;

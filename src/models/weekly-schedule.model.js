@@ -15,23 +15,29 @@ const weeklyScheduleSchema = new mongoose.Schema(
       max: 6,
     },
 
-    morning: {
-      enabled: {
-        type: Boolean,
-        default: true,
-      },
-    },
-
-    evening: {
-      enabled: {
-        type: Boolean,
-        default: true,
-      },
-    },
-
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    morningStart: {
+      type: String,
+      default: null,
+    },
+
+    morningEnd: {
+      type: String,
+      default: null,
+    },
+
+    eveningStart: {
+      type: String,
+      default: null,
+    },
+
+    eveningEnd: {
+      type: String,
+      default: null,
     },
   },
   {
@@ -40,8 +46,13 @@ const weeklyScheduleSchema = new mongoose.Schema(
 );
 
 weeklyScheduleSchema.index(
-  { clinic: 1, dayOfWeek: 1 },
-  { unique: true },
+  {
+    clinic: 1,
+    dayOfWeek: 1,
+  },
+  {
+    unique: true,
+  },
 );
 
 const WeeklySchedule = mongoose.model(
