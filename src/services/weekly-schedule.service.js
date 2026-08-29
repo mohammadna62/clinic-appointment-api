@@ -16,10 +16,7 @@ export async function createWeeklySchedule(clinicId, data) {
   });
 
   if (existingSchedule) {
-    throw new AppError(
-      "Weekly schedule for this day already exists",
-      409,
-    );
+    throw new AppError("Weekly schedule for this day already exists", 409);
   }
 
   const policy = await ClinicTimePolicy.findOne({
@@ -27,10 +24,7 @@ export async function createWeeklySchedule(clinicId, data) {
   });
 
   if (!policy) {
-    throw new AppError(
-      "Clinic time policy not found",
-      404,
-    );
+    throw new AppError("Clinic time policy not found", 404);
   }
 
   validateScheduleData(data, policy);
@@ -57,21 +51,14 @@ export async function getWeeklySchedules(clinicId) {
   return schedules;
 }
 
-export async function updateWeeklySchedule(
-  clinicId,
-  scheduleId,
-  data,
-) {
+export async function updateWeeklySchedule(clinicId, scheduleId, data) {
   const schedule = await WeeklySchedule.findOne({
     _id: scheduleId,
     clinic: clinicId,
   });
 
   if (!schedule) {
-    throw new AppError(
-      "Weekly schedule not found",
-      404,
-    );
+    throw new AppError("Weekly schedule not found", 404);
   }
 
   const policy = await ClinicTimePolicy.findOne({
@@ -79,15 +66,11 @@ export async function updateWeeklySchedule(
   });
 
   if (!policy) {
-    throw new AppError(
-      "Clinic time policy not found",
-      404,
-    );
+    throw new AppError("Clinic time policy not found", 404);
   }
 
   const updatedData = {
-    isActive:
-      data.isActive ?? schedule.isActive,
+    isActive: data.isActive ?? schedule.isActive,
 
     morningStart:
       data.morningStart !== undefined
@@ -95,9 +78,7 @@ export async function updateWeeklySchedule(
         : schedule.morningStart,
 
     morningEnd:
-      data.morningEnd !== undefined
-        ? data.morningEnd
-        : schedule.morningEnd,
+      data.morningEnd !== undefined ? data.morningEnd : schedule.morningEnd,
 
     eveningStart:
       data.eveningStart !== undefined
@@ -105,9 +86,7 @@ export async function updateWeeklySchedule(
         : schedule.eveningStart,
 
     eveningEnd:
-      data.eveningEnd !== undefined
-        ? data.eveningEnd
-        : schedule.eveningEnd,
+      data.eveningEnd !== undefined ? data.eveningEnd : schedule.eveningEnd,
   };
 
   validateScheduleData(updatedData, policy);
@@ -119,40 +98,40 @@ export async function updateWeeklySchedule(
   return schedule;
 }
 
-export async function deleteWeeklySchedule(
-  clinicId,
-  scheduleId,
-) {
+export async function deleteWeeklySchedule(clinicId, scheduleId) {
   const schedule = await WeeklySchedule.findOneAndDelete({
     _id: scheduleId,
     clinic: clinicId,
   });
 
   if (!schedule) {
-    throw new AppError(
-      "Weekly schedule not found",
-      404,
-    );
+    throw new AppError("Weekly schedule not found", 404);
   }
 
   return schedule;
 }
 
 function validateScheduleData(data, policy) {
-  if (!data.isActive) {
+  const isActive = data.isActive ?? true;
+
+  if (!isActive) {
     return;
   }
 
-  const hasMorningStart = data.morningStart !== null &&
+  const hasMorningStart =
+    data.morningStart !== null &&
     data.morningStart !== undefined;
 
-  const hasMorningEnd = data.morningEnd !== null &&
+  const hasMorningEnd =
+    data.morningEnd !== null &&
     data.morningEnd !== undefined;
 
-  const hasEveningStart = data.eveningStart !== null &&
+  const hasEveningStart =
+    data.eveningStart !== null &&
     data.eveningStart !== undefined;
 
-  const hasEveningEnd = data.eveningEnd !== null &&
+  const hasEveningEnd =
+    data.eveningEnd !== null &&
     data.eveningEnd !== undefined;
 
   if (hasMorningStart !== hasMorningEnd) {
