@@ -36,17 +36,10 @@ export async function createDoctorSchedule(doctorId, data) {
   });
 
   if (!weeklySchedule) {
-    throw new AppError(
-      "No active weekly schedule found for this day",
-      409,
-    );
+    throw new AppError("No active weekly schedule found for this day", 409);
   }
 
-  validateDoctorScheduleTime(
-    startTime,
-    endTime,
-    weeklySchedule,
-  );
+  validateDoctorScheduleTime(startTime, endTime, weeklySchedule);
 
   const newStart = timeToMinutes(startTime);
   const newEnd = timeToMinutes(endTime);
@@ -61,10 +54,7 @@ export async function createDoctorSchedule(doctorId, data) {
     const existingStart = timeToMinutes(schedule.startTime);
     const existingEnd = timeToMinutes(schedule.endTime);
 
-    return (
-      newStart < existingEnd &&
-      newEnd > existingStart
-    );
+    return newStart < existingEnd && newEnd > existingStart;
   });
 
   if (hasOverlap) {
@@ -86,19 +76,110 @@ export async function createDoctorSchedule(doctorId, data) {
   return schedule;
 }
 
-function validateDoctorScheduleTime(
-  startTime,
-  endTime,
-  weeklySchedule,
-) {
+export async function getDoctorSchedules(doctorId) {
+  const doctor = await Doctor.findById(doctorId);
+
+  if (!doctor) {
+    throw new AppError("Doctor not found", 404);
+  }
+
+  const schedules = await DoctorSchedule.find({
+    doctor: doctorId,
+  }).sort({
+    dayOfWeek: 1,
+    startTime: 1,
+  });
+
+  return schedules;
+}
+
+export async function updateDoctorSchedule(doctorId, scheduleId, data) {
+  const schedule = await DoctorSchedule.findOne({
+    _id: scheduleId,
+    doctor: doctorId,
+  });
+
+  if (!schedule) {
+    throw new AppError("Doctor schedule not found", 404);
+  }
+
+  const updatedStartTime = data.startTime ?? schedule.startTime;
+
+  const updatedEndTime = data.endTime ?? schedule.endTime;
+
+  const updatedIsActive = data.isActive ?? schedule.isActive;
+
+  if (updatedIsActive) {
+    const weeklySchedule = await WeeklySchedule.findOne({
+      clinic: schedule.clinic,
+      dayOfWeek: schedule.dayOfWeek,
+      isActive: true,
+    });
+
+    if (!weeklySchedule) {
+      throw new AppError("No active weekly schedule found for this day", 409);
+    }
+
+    validateDoctorScheduleTime(
+      updatedStartTime,
+      updatedEndTime,
+      weeklySchedule,
+    );
+
+    const newStart = timeToMinutes(updatedStartTime);
+    const newEnd = timeToMinutes(updatedEndTime);
+
+    const existingSchedules = await DoctorSchedule.find({
+      doctor: doctorId,
+      dayOfWeek: schedule.dayOfWeek,
+      isActive: true,
+      _id: { $ne: scheduleId },
+    });
+
+    const hasOverlap = existingSchedules.some((existingSchedule) => {
+      const existingStart = timeToMinutes(existingSchedule.startTime);
+
+      const existingEnd = timeToMinutes(existingSchedule.endTime);
+
+      return newStart < existingEnd && newEnd > existingStart;
+    });
+
+    if (hasOverlap) {
+      throw new AppError(
+        "Doctor schedule overlaps with an existing schedule",
+        409,
+      );
+    }
+  }
+
+  schedule.startTime = updatedStartTime;
+  schedule.endTime = updatedEndTime;
+  schedule.isActive = updatedIsActive;
+
+  await schedule.save();
+
+  return schedule;
+}
+
+export async function deleteDoctorSchedule(doctorId, scheduleId) {
+  const schedule = await DoctorSchedule.findOneAndDelete({
+    _id: scheduleId,
+    doctor: doctorId,
+  });
+
+  if (!schedule) {
+    throw new AppError("Doctor schedule not found", 404);
+  }
+
+  return schedule;
+}
+
+function validateDoctorScheduleTime(startTime, endTime, weeklySchedule) {
   const startMinutes = timeToMinutes(startTime);
   const endMinutes = timeToMinutes(endTime);
 
   if (startMinutes >= endMinutes) {
-    throw new AppError(
-      "Start time must be before end time",
-      400,
-    );
+    throw new AppError("Start time must be before end time", 400);
   }
 
   const periods = [];
@@ -108,12 +189,8 @@ function validateDoctorScheduleTime(
     weeklySchedule.morningEnd !== null
   ) {
     periods.push({
-      start: timeToMinutes(
-        weeklySchedule.morningStart,
-      ),
-      end: timeToMinutes(
-        weeklySchedule.morningEnd,
-      ),
+      start: timeToMinutes(weeklySchedule.morningStart),
+      end: timeToMinutes(weeklySchedule.morningEnd),
     });
   }
 
@@ -122,25 +199,16 @@ function validateDoctorScheduleTime(
     weeklySchedule.eveningEnd !== null
   ) {
     periods.push({
-      start: timeToMinutes(
-        weeklySchedule.eveningStart,
-      ),
-      end: timeToMinutes(
-        weeklySchedule.eveningEnd,
-      ),
+      start: timeToMinutes(weeklySchedule.eveningStart),
+      end: timeToMinutes(weeklySchedule.eveningEnd),
     });
   }
 
   const isInsideWorkingPeriod = periods.some(
-    (period) =>
-      startMinutes >= period.start &&
-      endMinutes <= period.end,
+    (period) => startMinutes >= period.start && endMinutes <= period.end,
   );
 
   if (!isInsideWorkingPeriod) {
-    throw new AppError(
-      "Doctor schedule is outside clinic working hours",
-      400,
-    );
+    throw new AppError("Doctor schedule is outside clinic working hours", 400);
   }
 }

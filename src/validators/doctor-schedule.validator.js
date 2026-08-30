@@ -3,23 +3,30 @@ import mongoose from "mongoose";
 
 const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-export const doctorScheduleIdSchema = z
-  .object({
-    scheduleId: z.string().refine(
-      (value) => mongoose.isValidObjectId(value),
-      {
-        message: "Invalid schedule ID",
-      },
-    ),
-  })
-  .strict();
-
-export const doctorIdSchema = z
+export const doctorIdScheduleSchema = z
   .object({
     doctorId: z.string().refine(
       (value) => mongoose.isValidObjectId(value),
       {
         message: "Invalid doctor ID",
+      },
+    ),
+  })
+  .strict();
+
+export const doctorScheduleParamsSchema = z
+  .object({
+    doctorId: z.string().refine(
+      (value) => mongoose.isValidObjectId(value),
+      {
+        message: "Invalid doctor ID",
+      },
+    ),
+
+    scheduleId: z.string().refine(
+      (value) => mongoose.isValidObjectId(value),
+      {
+        message: "Invalid schedule ID",
       },
     ),
   })
@@ -62,7 +69,9 @@ export const updateDoctorScheduleSchema = z
       .regex(timeRegex, "Invalid end time")
       .optional(),
 
-    isActive: z.boolean().optional(),
+    isActive: z
+      .boolean()
+      .optional(),
   })
   .strict()
   .refine(
