@@ -1,3 +1,4 @@
+import { startDailyAppointmentGenerator } from "./jobs/generate-daily-appointments.job.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import DoctorSchedule from "../models/doctor-schedule.model.js";
 import Doctor from "../models/doctor.model.js";

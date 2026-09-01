@@ -15,7 +15,7 @@ import userRoutes from "./routes/user.routes.js";
 import clinicRoutes from "./routes/clinic.routes.js";
 import specialtyRoutes from "./routes/specialty.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
-
+import availableAppointmentRoutes from "./routes/available-appointment.routes.js";
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,10 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(cookieParser());
 
-app.use(
-  "/uploads",
-  express.static(path.join(__dirname, "../public/uploads")),
-);
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +54,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/admin/clinics", clinicRoutes);
 app.use("/api/v1/admin/specialties", specialtyRoutes);
 app.use("/api/v1/doctors", doctorRoutes);
+app.use("/api/v1/admin/available-appointments", availableAppointmentRoutes);
 
 /*
 |--------------------------------------------------------------------------
