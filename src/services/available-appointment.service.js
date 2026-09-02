@@ -1,16 +1,21 @@
-import { startDailyAppointmentGenerator } from "./jobs/generate-daily-appointments.job.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import DoctorSchedule from "../models/doctor-schedule.model.js";
 import Doctor from "../models/doctor.model.js";
 import ClinicTimePolicy from "../models/clinic-time-policy.model.js";
 import Clinic from "../models/clinic.model.js";
 import AppError from "../errors/app-error.js";
+
 import { timeToMinutes } from "../utils/time.util.js";
 
-export async function generateDoctorAppointments(
+import {
+  getTodayLocalDate,
+  addDays,
+  getProjectDayOfWeek,
+} from "../utils/date.util.js";
+
+export async function generateAppointmentsForDate(
   doctorId,
-  startDate = new Date(),
-  days = 30,
+  date,
 ) {
   const doctor = await Doctor.findById(doctorId);
 
@@ -44,9 +49,12 @@ export async function generateDoctorAppointments(
     );
   }
 
+  const dayOfWeek = getProjectDayOfWeek(date);
+
   const schedules = await DoctorSchedule.find({
     doctor: doctorId,
     clinic: doctor.clinic,
+    dayOfWeek,
     isActive: true,
   });
 
@@ -56,44 +64,33 @@ export async function generateDoctorAppointments(
 
   const appointments = [];
 
-  const start = new Date(startDate);
-  start.setHours(0, 0, 0, 0);
-
-  for (let day = 0; day < days; day++) {
-    const currentDate = new Date(start);
-    currentDate.setDate(start.getDate() + day);
-
-    const dayOfWeek = currentDate.getDay();
-
-    const daySchedules = schedules.filter(
-      (schedule) => schedule.dayOfWeek === dayOfWeek,
+  for (const schedule of schedules) {
+    const scheduleStart = timeToMinutes(
+      schedule.startTime,
     );
 
-    for (const schedule of daySchedules) {
-      const scheduleStart = timeToMinutes(schedule.startTime);
-      const scheduleEnd = timeToMinutes(schedule.endTime);
+    const scheduleEnd = timeToMinutes(
+      schedule.endTime,
+    );
 
-      const appointmentDuration = policy.appointmentDuration;
+    const appointmentDuration =
+      policy.appointmentDuration;
 
-      for (
-        let startMinutes = scheduleStart;
-        startMinutes + appointmentDuration <= scheduleEnd;
-        startMinutes += appointmentDuration
-      ) {
-        const endMinutes =
-          startMinutes + appointmentDuration;
+    for (
+      let startMinutes = scheduleStart;
+      startMinutes + appointmentDuration <= scheduleEnd;
+      startMinutes += appointmentDuration
+    ) {
+      const endMinutes =
+        startMinutes + appointmentDuration;
 
-        const startTime = minutesToTime(startMinutes);
-        const endTime = minutesToTime(endMinutes);
-
-        appointments.push({
-          doctor: doctorId,
-          clinic: doctor.clinic,
-          date: currentDate,
-          startTime,
-          endTime,
-        });
-      }
+      appointments.push({
+        doctor: doctorId,
+        clinic: doctor.clinic,
+        date,
+        startTime: minutesToTime(startMinutes),
+        endTime: minutesToTime(endMinutes),
+      });
     }
   }
 
@@ -101,22 +98,67 @@ export async function generateDoctorAppointments(
     return [];
   }
 
-  const operations = appointments.map((appointment) => ({
-    updateOne: {
-      filter: {
-        doctor: appointment.doctor,
-        date: appointment.date,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
+  const operations = appointments.map(
+    (appointment) => ({
+      updateOne: {
+        filter: {
+          doctor: appointment.doctor,
+          date: appointment.date,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+        },
+        update: {
+          $setOnInsert: appointment,
+        },
+        upsert: true,
       },
-      update: {
-        $setOnInsert: appointment,
-      },
-      upsert: true,
-    },
-  }));
+    }),
+  );
 
-  await AvailableAppointment.bulkWrite(operations);
+  await AvailableAppointment.bulkWrite(
+    operations,
+  );
+
+  return appointments;
+}
+
+export async function generateDoctorAppointments(
+  doctorId,
+  startDate = getTodayLocalDate(),
+  days = 30,
+) {
+  const start = new Date(startDate);
+
+  start.setUTCHours(0, 0, 0, 0);
+
+  const appointments = [];
+
+  for (let day = 0; day < days; day++) {
+    const currentDate = addDays(start, day);
+
+    const generated =
+      await generateAppointmentsForDate(
+        doctorId,
+        currentDate,
+      );
+
+    appointments.push(...generated);
+  }
+
+  return appointments;
+}
+
+export async function generateNextDayAppointments(
+  doctorId,
+  today = getTodayLocalDate(),
+) {
+  const nextDate = addDays(today, 29);
+
+  const appointments =
+    await generateAppointmentsForDate(
+      doctorId,
+      nextDate,
+    );
 
   return appointments;
 }

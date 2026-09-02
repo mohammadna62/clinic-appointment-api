@@ -11,3 +11,9 @@ export const doctorIdAppointmentSchema = z
     ),
   })
   .strict();
+
+  export const generateAppointmentForDateSchema = z
+  .object({
+    date: z.coerce.date(),
+  })
+  .strict();
