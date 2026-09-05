@@ -29,11 +29,10 @@ const envSchema = z.object({
   SMS_PASSWORD: z.string().optional(),
   SMS_SENDER_NUMBER: z.string().optional(),
   SMS_VERIFY_PATTERN_CODE: z.string().optional(),
+  PROJECT_TIME_ZONE: z.string(),
 });
 
-
 const parsedEnv = envSchema.parse(process.env);
-
 
 export default {
   ...parsedEnv,
