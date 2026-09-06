@@ -2,7 +2,10 @@ import env from "./src/config/env.js";
 import app from "./src/app.js";
 import { connectDatabase } from "./src/config/database.js";
 import { connectRedis } from "./src/config/redis.js";
-import { startAppointmentJob } from "./src/jobs/appointment.job.js";
+import {
+  startAppointmentJob,
+  recoverMissingAppointments,
+} from "./src/jobs/appointment.job.js";
 console.log("[Bootstrap] server.js started");
 
 function startServer() {
@@ -21,6 +24,7 @@ async function bootstrap() {
   await connectDatabase();
   await connectRedis();
 
+  await recoverMissingAppointments();
   startAppointmentJob();
 
   startServer();
