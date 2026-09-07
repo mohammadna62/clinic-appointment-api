@@ -1,7 +1,7 @@
 import {
   generateAppointmentsForDate as generateAppointmentsForDateService,
   generateDoctorAppointments as generateDoctorAppointmentsService,
-  generateNextDayAppointments as generateNextDayAppointmentsService,
+  getAvailableAppointments as getAvailableAppointmentsService,
 } from "../services/available-appointment.service.js";
 
 import { successResponse } from "../helpers/response.js";
@@ -46,18 +46,15 @@ export const generateDoctorAppointments = async (req, res, next) => {
   }
 };
 
-export const generateNextDayAppointments = async (req, res, next) => {
+export const getAvailableAppointments = async (req, res, next) => {
   try {
-    const { doctorId } = req.validated.params;
+    const { page, limit } = req.validated.query;
 
-    const appointments = await generateNextDayAppointmentsService(doctorId);
+    const result = await getAvailableAppointmentsService(page, limit);
 
     return successResponse(res, {
-      statusCode: 201,
-      message: "Next day appointments generated successfully",
-      data: {
-        appointments,
-      },
+      message: "Available appointments retrieved successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

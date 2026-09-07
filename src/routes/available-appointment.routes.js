@@ -7,16 +7,27 @@ import validate from "../middlewares/validate.middleware.js";
 import {
   generateAppointments,
   generateDoctorAppointments,
-  generateNextDayAppointments,
+  getAvailableAppointments,
 } from "../controllers/available-appointment.controller.js";
 
 import {
   doctorIdAppointmentSchema,
   generateAppointmentForDateSchema,
+  getAvailableAppointmentsQuerySchema,
 } from "../validators/available-appointment.validator.js";
 
 const router = express.Router();
 
+// Get available appointments
+
+router
+  .route("/")
+  .get(
+    auth,
+    roleGuard("patient"),
+    validate(getAvailableAppointmentsQuerySchema, "query"),
+    getAvailableAppointments,
+  );
 
 // Generate appointments for a specific date
 router
@@ -24,17 +35,10 @@ router
   .post(
     auth,
     roleGuard("admin"),
-    validate(
-      doctorIdAppointmentSchema,
-      "params",
-    ),
-    validate(
-      generateAppointmentForDateSchema,
-      "body",
-    ),
+    validate(doctorIdAppointmentSchema, "params"),
+    validate(generateAppointmentForDateSchema, "body"),
     generateAppointments,
   );
-
 
 // Initial 30-day generation
 router
@@ -42,25 +46,8 @@ router
   .post(
     auth,
     roleGuard("admin"),
-    validate(
-      doctorIdAppointmentSchema,
-      "params",
-    ),
+    validate(doctorIdAppointmentSchema, "params"),
     generateDoctorAppointments,
-  );
-
-
-// Temporary manual test for rolling 30-day generation
-router
-  .route("/generate-next/:doctorId")
-  .post(
-    auth,
-    roleGuard("admin"),
-    validate(
-      doctorIdAppointmentSchema,
-      "params",
-    ),
-    generateNextDayAppointments,
   );
 
 export default router;
