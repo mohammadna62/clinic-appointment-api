@@ -330,7 +330,7 @@ export async function getActiveDoctorsByClinic(clinicId, page, limit) {
     Doctor.find({
       clinic: clinicId,
       isActive: true,
-    }).skip(skip).limit(limit),
+    }).sort({ firstName: 1, lastName: 1 }).skip(skip).limit(limit).populate("user","firstName lastName"),
     Doctor.countDocuments({ clinic: clinicId, isActive: true }),
   ]);
 

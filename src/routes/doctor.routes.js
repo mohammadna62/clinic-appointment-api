@@ -11,11 +11,14 @@ import {
   updateDoctor,
 } from "../controllers/doctor.controller.js";
 
+import {getDoctorSchedulesForPatient} from "./../controllers/doctor-schedule.controller.js"
+
 import {
   createDoctorSchema,
   doctorIdSchema,
   updateDoctorSchema,
 } from "./../validators/doctor.validator.js";
+
 
 const router = express.Router();
 
@@ -47,5 +50,12 @@ router
     validate(doctorIdSchema, "params"),
     getDoctorById,
   );
-
+router
+  .route("/:doctorId/schedules")
+  .get(
+    auth,
+    roleGuard("patient"),
+    validate(doctorIdSchema, "params"),
+    getDoctorSchedulesForPatient,
+  );
 export default router;

@@ -79,3 +79,20 @@ export const deleteDoctorSchedule = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getDoctorSchedulesForPatient = async (req, res, next) => {
+  try {
+    const { doctorId } = req.validated.params;
+
+    const schedules = await getDoctorSchedulesService(doctorId);
+
+    return successResponse(res, {
+      message: "Doctor schedules retrieved successfully",
+      data: {
+        schedules,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
