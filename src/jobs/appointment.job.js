@@ -19,10 +19,7 @@ export async function generateNextDayAppointmentsForAllDoctors() {
 
   for (const doctor of doctors) {
     try {
-      const appointments =
-        await generateNextDayAppointments(
-          doctor._id,
-        );
+      const appointments = await generateNextDayAppointments(doctor._id);
 
       console.log(
         `[Appointment Job] Doctor ${doctor._id}: ${appointments.length} appointments generated.`,
@@ -42,6 +39,15 @@ export async function recoverMissingAppointments() {
   }).select("_id");
 
   const today = getTodayLocalDate();
+  
+  const deleteBefore = addDays(today, -2);
+
+  await AvailableAppointment.deleteMany({
+    date: {
+      $lt: deleteBefore,
+    },
+  });
+
   const targetDate = addDays(today, 29);
 
   for (const doctor of doctors) {
@@ -53,12 +59,11 @@ export async function recoverMissingAppointments() {
         .select("date");
 
       if (!lastAppointment) {
-        const appointments =
-          await generateDoctorAppointments(
-            doctor._id,
-            today,
-            30,
-          );
+        const appointments = await generateDoctorAppointments(
+          doctor._id,
+          today,
+          30,
+        );
 
         console.log(
           `[Appointment Recovery] Doctor ${doctor._id}: ${appointments.length} appointments generated for initial 30-day window.`,
@@ -67,21 +72,17 @@ export async function recoverMissingAppointments() {
         continue;
       }
 
-      let nextDate = addDays(
-        lastAppointment.date,
-        1,
-      );
+      let nextDate = addDays(lastAppointment.date, 1);
 
       if (nextDate < today) {
         nextDate = today;
       }
 
       while (nextDate <= targetDate) {
-        const appointments =
-          await generateAppointmentsForDate(
-            doctor._id,
-            nextDate,
-          );
+        const appointments = await generateAppointmentsForDate(
+          doctor._id,
+          nextDate,
+        );
 
         console.log(
           `[Appointment Recovery] Doctor ${doctor._id}: ${appointments.length} appointments generated for ${nextDate.toISOString().slice(0, 10)}.`,
@@ -102,9 +103,7 @@ export function startAppointmentJob() {
   cron.schedule(
     "0 1 * * *",
     async () => {
-      console.log(
-        "[Appointment Job] Starting daily appointment generation...",
-      );
+      console.log("[Appointment Job] Starting daily appointment generation...");
 
       try {
         await generateNextDayAppointmentsForAllDoctors();
@@ -113,10 +112,7 @@ export function startAppointmentJob() {
           "[Appointment Job] Daily appointment generation completed.",
         );
       } catch (error) {
-        console.error(
-          "[Appointment Job] Job failed:",
-          error,
-        );
+        console.error("[Appointment Job] Job failed:", error);
       }
     },
     {
