@@ -23,3 +23,19 @@ export const doctorIdAppointmentSchema = z
     limit: z.coerce.number().int().min(1).max(100).default(20),
   })
   .strict();
+
+  export const appointmentIdSchema = z
+  .object({
+    appointmentId: z.string().refine(
+      (value) => mongoose.isValidObjectId(value),
+      {
+        message: "Invalid appointment ID",
+      },
+    ),
+  })
+  .strict();
+export const updateAppointmentStatusSchema = z
+  .object({
+    status: z.enum(["available", "suspended"]),
+  })
+  .strict();

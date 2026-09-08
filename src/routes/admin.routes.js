@@ -36,6 +36,8 @@ import {
 import {
   doctorIdAppointmentSchema,
   generateAppointmentForDateSchema,
+  appointmentIdSchema,
+  updateAppointmentStatusSchema,
 } from "../validators/available-appointment.validator.js";
 
 //* Controller
@@ -68,6 +70,7 @@ import {
 import {
   generateAppointments,
   generateDoctorAppointments,
+  updateAppointmentStatus,
 } from "../controllers/available-appointment.controller.js";
 
 import upload from "../middlewares/upload.middleware.js";
@@ -224,5 +227,14 @@ router
     roleGuard("admin"),
     validate(doctorIdAppointmentSchema, "params"),
     generateDoctorAppointments,
+  );
+  router
+  .route("/available-appointments/:appointmentId/status")
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(appointmentIdSchema, "params"),
+    validate(updateAppointmentStatusSchema, "body"),
+    updateAppointmentStatus,
   );
 export default router;

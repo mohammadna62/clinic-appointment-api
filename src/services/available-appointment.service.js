@@ -202,6 +202,41 @@ export async function getAvailableAppointments(page = 1, limit = 20) {
     pagination: createPaginationData(page, limit, total),
   };
 }
+
+export async function updateAppointmentStatus(appointmentId, status) {
+  const appointment = await AvailableAppointment.findById(appointmentId);
+
+  if (!appointment) {
+    throw new AppError("Appointment not found", 404);
+  }
+
+  if (appointment.status === "booked" && status !== "available") {
+    throw new AppError(
+      "Booked appointment can only be released to available",
+      409,
+    );
+  }
+
+  if (appointment.status === "reserved") {
+    throw new AppError(
+      "Reserved appointment status cannot be changed manually",
+      409,
+    );
+  }
+
+  appointment.status = status;
+
+  if (status === "available") {
+    appointment.reservedBy = null;
+    appointment.reservedUntil = null;
+  }
+
+  await appointment.save();
+
+  return appointment;
+}
+
+//* Convert Minutes To Time
 function minutesToTime(minutes) {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
