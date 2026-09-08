@@ -1,7 +1,9 @@
-import express from "Express";
+import express from "express";
 import auth from "./../middlewares/auth.middleware.js";
 import roleGuard from "./../middlewares/roleGuard.middleware.js";
 import { getUser, deleteUser } from "./../controllers/user.controller.js";
+
+//* Validator
 import validate from "./../middlewares/validate.middleware.js";
 import {
   getUsersQuerySchema,
@@ -31,6 +33,12 @@ import {
   createDoctorScheduleSchema,
   updateDoctorScheduleSchema,
 } from "./../validators/doctor-schedule.validator.js";
+import {
+  doctorIdAppointmentSchema,
+  generateAppointmentForDateSchema,
+} from "../validators/available-appointment.validator.js";
+
+//* Controller
 
 import {
   getDoctors,
@@ -57,10 +65,16 @@ import {
   updateDoctorSchedule,
   deleteDoctorSchedule,
 } from "./../controllers/doctor-schedule.controller.js";
+import {
+  generateAppointments,
+  generateDoctorAppointments,
+} from "../controllers/available-appointment.controller.js";
+
 import upload from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
+//* User Routes
 router
   .route("/users")
   .get(
@@ -77,6 +91,7 @@ router
     validate(userIdSchema, "params"),
     deleteUser,
   );
+//* Doctor Routes
 router
   .route("/doctors")
   .get(
@@ -104,6 +119,7 @@ router
     validate(updateDoctorSchema, "body"),
     updateDoctorByAdmin,
   );
+//* Clinic Routes
 router
   .route("/clinics/:clinicId/time-policy")
   .post(
@@ -158,6 +174,8 @@ router
     validate(weeklyScheduleIdSchema, "params"),
     deleteWeeklySchedule,
   );
+
+//* Doctor Schedule Routes
 router
   .route("/doctors/:doctorId/schedules")
   .post(
@@ -187,5 +205,24 @@ router
     roleGuard("admin"),
     validate(doctorScheduleParamsSchema, "params"),
     deleteDoctorSchedule,
+  );
+//* Appointment Routes
+router
+  .route("/available-appointments/generate/:doctorId")
+  .post(
+    auth,
+    roleGuard("admin"),
+    validate(doctorIdAppointmentSchema, "params"),
+    validate(generateAppointmentForDateSchema, "body"),
+    generateAppointments,
+  );
+
+router
+  .route("/available-appointments/generate-month/:doctorId")
+  .post(
+    auth,
+    roleGuard("admin"),
+    validate(doctorIdAppointmentSchema, "params"),
+    generateDoctorAppointments,
   );
 export default router;
