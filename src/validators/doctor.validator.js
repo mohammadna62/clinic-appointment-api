@@ -47,11 +47,8 @@ export const getDoctorsQuerySchema = z.object({
 });
 export const clinicIdSchema = z
   .object({
-    clinicId: z.string().refine(
-      (value) => mongoose.isValidObjectId(value),
-      {
-        message: "Invalid clinic ID",
-      },
-    ),
+    clinicId: z.string().refine((value) => mongoose.isValidObjectId(value), {
+      message: "Invalid clinic ID",
+    }),
   })
   .strict();

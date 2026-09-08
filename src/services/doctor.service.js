@@ -313,3 +313,26 @@ export async function getDoctors(status, page, limit) {
     pagination,
   };
 }
+
+export async function getActiveDoctorsByClinic(clinicId, page, limit) {
+  const skip = (page - 1) * limit;
+
+  const clinic = await Clinic.findOne({
+    _id: clinicId,
+    isActive: true,
+  });
+
+  if (!clinic) {
+    throw new AppError("Clinic not found", 404);
+  }
+
+  const [doctors, total] = await Promise.all([
+    Doctor.find({
+      clinic: clinicId,
+      isActive: true,
+    }).skip(skip).limit(limit),
+    Doctor.countDocuments({ clinic: clinicId, isActive: true }),
+  ]);
+
+  return { doctors, pagination: createPaginationData(page, limit, total) };
+}
