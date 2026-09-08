@@ -46,7 +46,6 @@ export async function getClinicById(clinicId) {
 }
 
 export async function updateClinic(clinicId, data) {
-  
   const { name } = data;
 
   if (name !== undefined) {
@@ -91,4 +90,30 @@ export async function updateClinicStatus(clinicId, isActive) {
     throw new AppError("Clinic not found", 404);
   }
   return clinic;
+}
+
+export async function getActiveClinics(page, limit) {
+  const skip = (page - 1) * limit;
+
+  const [clinics, totalCount] = await Promise.all([
+    Clinic.find({
+      isActive: true,
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Clinic.countDocuments({
+      isActive: true,
+    }),
+  ]);
+
+  return {
+    clinics,
+    pagination: createPaginationData(
+      page,
+      limit,
+      totalCount,
+    ),
+  };
 }

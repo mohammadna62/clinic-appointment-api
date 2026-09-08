@@ -5,6 +5,7 @@ import {
   getClinicById as getClinicByIdService,
   updateClinic as updateClinicService,
   updateClinicStatus as updateClinicStatusService,
+  getActiveClinics as getActiveClinicsService,
 } from "./../services/clinic.service.js";
 
 export const createClinic = async (req, res, next) => {
@@ -70,6 +71,7 @@ export const updateClinic = async (req, res, next) => {
     next(error);
   }
 };
+
 export const updateClinicStatus = async (req, res, next) => {
   try {
     const clinic = await updateClinicStatusService(
@@ -82,6 +84,21 @@ export const updateClinicStatus = async (req, res, next) => {
       data: {
         clinic,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getActiveClinics = async (req, res, next) => {
+  try {
+    const { page, limit } = req.validated.query;
+
+    const result = await getActiveClinicsService(page, limit);
+
+    return successResponse(res, {
+      message: "Clinics retrieved successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

@@ -6,7 +6,7 @@ import {
   getClinics,
   getClinicById,
   updateClinic,
-  updateClinicStatus
+  updateClinicStatus,
 } from "./../controllers/clinic.controller.js";
 import validate from "./../middlewares/validate.middleware.js";
 import {

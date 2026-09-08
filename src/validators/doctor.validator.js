@@ -45,3 +45,13 @@ export const getDoctorsQuerySchema = z.object({
 
   limit: z.coerce.number().int().min(1).max(100).default(10),
 });
+export const clinicIdSchema = z
+  .object({
+    clinicId: z.string().refine(
+      (value) => mongoose.isValidObjectId(value),
+      {
+        message: "Invalid clinic ID",
+      },
+    ),
+  })
+  .strict();
