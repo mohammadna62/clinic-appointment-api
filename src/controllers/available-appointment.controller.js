@@ -3,6 +3,7 @@ import {
   generateDoctorAppointments as generateDoctorAppointmentsService,
   getAvailableAppointments as getAvailableAppointmentsService,
   updateAppointmentStatus as updateAppointmentStatusService,
+  reserveAppointment as reserveAppointmentService,
 } from "../services/available-appointment.service.js";
 
 import { successResponse } from "../helpers/response.js";
@@ -75,6 +76,27 @@ export const updateAppointmentStatus = async (req, res, next) => {
     return successResponse(res, {
       message: "Appointment status updated successfully",
       data: appointment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const reserveAppointment = async (req, res, next) => {
+  try {
+    const { appointmentId } = req.validated.params;
+
+    const appointment = await reserveAppointmentService(
+      appointmentId,
+      req.user.userId,
+    );
+
+    return successResponse(res, {
+      statusCode: 201,
+      message: "Appointment reserved successfully",
+      data: {
+        appointment,
+      },
     });
   } catch (error) {
     next(error);

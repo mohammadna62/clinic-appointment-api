@@ -5,6 +5,8 @@ import ClinicTimePolicy from "../models/clinic-time-policy.model.js";
 import Clinic from "../models/clinic.model.js";
 import AppError from "../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
+import { isProfileCompleted } from "./user.service.js";
+import User from "../models/user.model.js";
 
 import { timeToMinutes } from "../utils/time.util.js";
 
@@ -233,6 +235,40 @@ export async function updateAppointmentStatus(appointmentId, status) {
 
   await appointment.save();
 
+  return appointment;
+}
+
+export async function reserveAppointment(appointmentId, userId) {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+
+  const isUserBeforeCompleted = isProfileCompleted(user);
+
+  if (!isUserBeforeCompleted) {
+    throw new AppError("User Profile is not completed", 409);
+  }
+
+  const reservedUntil = new Date(Date.now() + 10 * 60 * 1000);
+
+  const appointment = await AvailableAppointment.findOneAndUpdate(
+    { _id: appointmentId, status: "available" },
+    {
+      $set: {
+        status: "reserved",
+        reservedBy: userId,
+        reservedUntil,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+  if (!appointment) {
+    throw new AppError("Appointment is no longer available", 409);
+  }
   return appointment;
 }
 
