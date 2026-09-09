@@ -5,6 +5,7 @@ import { connectRedis } from "./src/config/redis.js";
 import {
   startAppointmentJob,
   recoverMissingAppointments,
+  startReservationExpirationJob,
 } from "./src/jobs/appointment.job.js";
 console.log("[Bootstrap] server.js started");
 
@@ -26,6 +27,7 @@ async function bootstrap() {
 
   await recoverMissingAppointments();
   startAppointmentJob();
+  startReservationExpirationJob();
 
   startServer();
 

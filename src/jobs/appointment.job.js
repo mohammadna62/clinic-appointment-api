@@ -8,6 +8,7 @@ import {
   generateAppointmentsForDate,
   generateDoctorAppointments,
   generateNextDayAppointments,
+  releaseExpiredReservations,
 } from "../services/available-appointment.service.js";
 
 import { getTodayLocalDate, addDays } from "../utils/date.util.js";
@@ -113,6 +114,25 @@ export function startAppointmentJob() {
         );
       } catch (error) {
         console.error("[Appointment Job] Job failed:", error);
+      }
+    },
+    {
+      timezone: env.PROJECT_TIME_ZONE,
+    },
+  );
+}
+
+export function startReservationExpirationJob() {
+  cron.schedule(
+    "* * * * *",
+    async () => {
+      try {
+        await releaseExpiredReservations();
+      } catch (error) {
+        console.error(
+          "[Reservation Job] Failed:",
+          error,
+        );
       }
     },
     {

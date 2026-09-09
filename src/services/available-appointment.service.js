@@ -272,6 +272,26 @@ export async function reserveAppointment(appointmentId, userId) {
   return appointment;
 }
 
+export async function releaseExpiredReservations() {
+  const result =
+    await AvailableAppointment.updateMany(
+      {
+        status: "reserved",
+        reservedUntil: {
+          $lte: new Date(),
+        },
+      },
+      {
+        $set: {
+          status: "available",
+          reservedBy: null,
+          reservedUntil: null,
+        },
+      },
+    );
+
+  return result;
+}
 //* Convert Minutes To Time
 function minutesToTime(minutes) {
   const hours = Math.floor(minutes / 60);
