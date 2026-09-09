@@ -146,8 +146,9 @@ export async function getAvailableAppointments(page = 1, limit = 20) {
   const skip = (page - 1) * limit;
 
   const filter = {
-    status: "available",
-  };
+  status: "available",
+  date: { $gte: today },
+};
 
   const [appointments, total] = await Promise.all([
     AvailableAppointment.find(filter)
@@ -245,9 +246,9 @@ export async function reserveAppointment(appointmentId, userId) {
     throw new AppError("User not found", 404);
   }
 
-  const isUserBeforeCompleted = isProfileCompleted(user);
+  const isCompleted = isProfileCompleted(user);
 
-  if (!isUserBeforeCompleted) {
+  if (!isCompleted) {
     throw new AppError("User Profile is not completed", 409);
   }
 

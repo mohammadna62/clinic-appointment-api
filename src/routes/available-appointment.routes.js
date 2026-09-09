@@ -22,7 +22,7 @@ router
   );
   router
   .route("/:appointmentId/reserve")
-  .patch(
+  .post(
     auth,
     roleGuard("patient"),
     validate(appointmentIdSchema, "params"),
