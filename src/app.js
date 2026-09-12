@@ -18,6 +18,8 @@ import specialtyRoutes from "./routes/specialty.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 import availableAppointmentRoutes from "./routes/available-appointment.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
+
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -60,6 +62,7 @@ app.use("/api/v1/doctors", doctorRoutes);
 app.use("/api/v1/admin/available-appointments", adminRoutes);
 app.use("/api/v1/available-appointments", availableAppointmentRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
+app.use("/api/v1/payments", paymentRoutes);
 
 /*
 |--------------------------------------------------------------------------

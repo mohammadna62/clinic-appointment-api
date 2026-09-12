@@ -15,7 +15,7 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
 
-    amount: {
+    amountInRial: {
       type: Number,
       required: true,
       min: 0,
@@ -34,11 +34,7 @@ const paymentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: [
-        "pending",
-        "paid",
-        "failed",
-      ],
+      enum: ["pending", "paid", "failed"],
       default: "pending",
     },
 
