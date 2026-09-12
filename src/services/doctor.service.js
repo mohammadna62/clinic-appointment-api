@@ -7,7 +7,7 @@ import { createPaginationData } from "./../utils/pagination.util.js";
 import { deleteUploadedFile } from "./../utils/file.util.js";
 
 export async function createDoctor(userId, data, file) {
-  const { clinic, specialty, medicalCode, bio } = data;
+  const { clinic, specialty, medicalCode, bio, consultationFee } = data;
 
   const user = await User.findById(userId);
 
@@ -63,6 +63,7 @@ export async function createDoctor(userId, data, file) {
     specialty,
     medicalCode,
     bio,
+    consultationFee,
     profileImage,
     isActive: false,
   });
@@ -205,21 +206,21 @@ export async function updateDoctorStatus(doctorId, data) {
 }
 
 export async function updateDoctorByAdmin(doctorId, data, file) {
-  const { clinic, specialty, medicalCode, bio } = data;
+  const { clinic, specialty, medicalCode, bio, consultationFee } = data;
 
   const doctor = await Doctor.findById(doctorId);
-
-  const oldProfileImage = doctor.profileImage;
 
   if (!doctor) {
     throw new AppError("Doctor not found", 404);
   }
+  const oldProfileImage = doctor.profileImage;
 
   if (
     clinic === undefined &&
     specialty === undefined &&
     medicalCode === undefined &&
     bio === undefined &&
+    consultationFee === undefined &&
     !file
   ) {
     throw new AppError("No changes provided", 400);
@@ -268,6 +269,9 @@ export async function updateDoctorByAdmin(doctorId, data, file) {
 
   if (bio !== undefined) {
     doctor.bio = bio;
+  }
+  if (consultationFee !== undefined) {
+    doctor.consultationFee = consultationFee;
   }
 
   if (file) {
@@ -330,7 +334,10 @@ export async function getActiveDoctorsByClinic(clinicId, page, limit) {
     Doctor.find({
       clinic: clinicId,
       isActive: true,
-    }).sort({ firstName: 1, lastName: 1 }).skip(skip).limit(limit).populate("user","firstName lastName"),
+    })
+      .skip(skip)
+      .limit(limit)
+      .populate("user", "firstName lastName"),
     Doctor.countDocuments({ clinic: clinicId, isActive: true }),
   ]);
 

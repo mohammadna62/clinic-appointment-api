@@ -81,6 +81,7 @@ export async function generateAppointmentsForDate(doctorId, date) {
         date,
         startTime: minutesToTime(startMinutes),
         endTime: minutesToTime(endMinutes),
+        price: doctor.consultationFee,
       });
     }
   }
@@ -146,9 +147,9 @@ export async function getAvailableAppointments(page = 1, limit = 20) {
   const skip = (page - 1) * limit;
 
   const filter = {
-  status: "available",
-  date: { $gte: today },
-};
+    status: "available",
+    date: { $gte: today },
+  };
 
   const [appointments, total] = await Promise.all([
     AvailableAppointment.find(filter)
@@ -274,22 +275,21 @@ export async function reserveAppointment(appointmentId, userId) {
 }
 
 export async function releaseExpiredReservations() {
-  const result =
-    await AvailableAppointment.updateMany(
-      {
-        status: "reserved",
-        reservedUntil: {
-          $lte: new Date(),
-        },
+  const result = await AvailableAppointment.updateMany(
+    {
+      status: "reserved",
+      reservedUntil: {
+        $lte: new Date(),
       },
-      {
-        $set: {
-          status: "available",
-          reservedBy: null,
-          reservedUntil: null,
-        },
+    },
+    {
+      $set: {
+        status: "available",
+        reservedBy: null,
+        reservedUntil: null,
       },
-    );
+    },
+  );
 
   return result;
 }

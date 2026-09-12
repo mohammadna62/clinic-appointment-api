@@ -29,6 +29,12 @@ const availableAppointmentSchema = new mongoose.Schema(
       required: true,
     },
 
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
     status: {
       type: String,
       enum: ["available", "reserved", "booked", "suspended"],

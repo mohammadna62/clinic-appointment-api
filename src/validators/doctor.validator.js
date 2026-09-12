@@ -10,6 +10,10 @@ export const createDoctorSchema = z
     medicalCode: z.string().trim().min(1, "Medical code is required"),
 
     bio: z.string().trim().max(1000).optional(),
+
+    consultationFee: z.coerce
+      .number()
+      .positive("Consultation fee must be greater than 0"),
   })
   .strict();
 
@@ -30,6 +34,11 @@ export const updateDoctorSchema = z
     medicalCode: z.string().trim().min(1).optional(),
 
     bio: z.string().trim().max(1000).optional(),
+
+    consultationFee: z.coerce
+      .number()
+      .positive("Consultation fee must be greater than 0")
+      .optional(),
   })
   .strict();
 

@@ -17,27 +17,15 @@ export async function createBooking(appointmentId, userId) {
   }
 
   if (!appointment.reservedBy) {
-    throw new AppError(
-      "Appointment is not reserved by any patient",
-      409,
-    );
+    throw new AppError("Appointment is not reserved by any patient", 409);
   }
 
   if (appointment.reservedBy.toString() !== userId.toString()) {
-    throw new AppError(
-      "Appointment is reserved by another patient",
-      409,
-    );
+    throw new AppError("Appointment is reserved by another patient", 409);
   }
 
-  if (
-    !appointment.reservedUntil ||
-    appointment.reservedUntil <= new Date()
-  ) {
-    throw new AppError(
-      "Appointment reservation has expired",
-      409,
-    );
+  if (!appointment.reservedUntil || appointment.reservedUntil <= new Date()) {
+    throw new AppError("Appointment reservation has expired", 409);
   }
 
   const existingBooking = await Booking.findOne({
@@ -45,10 +33,7 @@ export async function createBooking(appointmentId, userId) {
   });
 
   if (existingBooking) {
-    throw new AppError(
-      "A booking already exists for this appointment",
-      409,
-    );
+    throw new AppError("A booking already exists for this appointment", 409);
   }
 
   const overlappingBooking = await Booking.findOne({
@@ -66,10 +51,7 @@ export async function createBooking(appointmentId, userId) {
   });
 
   if (overlappingBooking) {
-    throw new AppError(
-      "Patient already has an overlapping booking",
-      409,
-    );
+    throw new AppError("Patient already has an overlapping booking", 409);
   }
 
   const booking = await Booking.create({
@@ -80,6 +62,7 @@ export async function createBooking(appointmentId, userId) {
     date: appointment.date,
     startTime: appointment.startTime,
     endTime: appointment.endTime,
+    amountInRial: appointment.price,
     status: "pending",
   });
 
