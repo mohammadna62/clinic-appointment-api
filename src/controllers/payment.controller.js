@@ -8,17 +8,15 @@ export const createPayment = async (req, res, next) => {
   try {
     const { bookingId } = req.validated.params;
 
-    const payment = await createPaymentService(
+    const result = await createPaymentService(
       bookingId,
       req.user.userId,
     );
 
     return successResponse(res, {
       statusCode: 201,
-      message: "Payment created successfully",
-      data: {
-        payment,
-      },
+      message: "Payment request created successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

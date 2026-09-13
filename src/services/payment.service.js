@@ -2,6 +2,7 @@ import Payment from "../models/payment.model.js";
 import Booking from "../models/booking.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import AppError from "../errors/app-error.js";
+import { createZarinpalPayment } from "./zarinpal.service.js";
 
 export async function createPayment(bookingId, userId) {
   const booking = await Booking.findById(bookingId);
@@ -83,5 +84,27 @@ export async function createPayment(bookingId, userId) {
     status: "pending",
   });
 
-  return payment;
+  try {
+    const paymentRequest = await createZarinpalPayment({
+      amountInRial: payment.amountInRial,
+      description: `Clinic appointment payment - ${booking._id}`,
+      mobile: undefined,
+    });
+
+    payment.authority = paymentRequest.authority;
+
+    await payment.save();
+
+    return {
+      payment,
+      paymentUrl: paymentRequest.paymentUrl,
+    };
+  } catch (error) {
+    await Payment.findByIdAndDelete(payment._id);
+
+    throw new AppError(
+      "Unable to create payment request",
+      502,
+    );
+  }
 }
