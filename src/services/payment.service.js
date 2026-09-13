@@ -2,7 +2,9 @@ import Payment from "../models/payment.model.js";
 import Booking from "../models/booking.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import AppError from "../errors/app-error.js";
-import { createZarinpalPayment } from "./zarinpal.service.js";
+import {
+  createPayment as createZarinpalPayment,
+} from "./zarinpal.service2.js";
 
 export async function createPayment(bookingId, userId) {
   const booking = await Booking.findById(bookingId);
