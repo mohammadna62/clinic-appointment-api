@@ -4,9 +4,9 @@ import AvailableAppointment from "../models/available-appointment.model.js";
 import AppError from "../errors/app-error.js";
 
 import {
-  createPayment as createZarinpalPayment,
-  verifyPayment as verifyZarinpalPayment,
-} from "./zarinpal.service2.js";
+  createZarinpalPayment,
+  verifyZarinpalPayment,
+} from "./zarinpal.service.js";
 
 export async function createPayment(bookingId, userId) {
   const booking = await Booking.findById(bookingId);

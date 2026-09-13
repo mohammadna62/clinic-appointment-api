@@ -41,3 +41,30 @@ export async function createZarinpalPayment({
     throw new Error(`Zarinpal payment request failed: ${message}`);
   }
 }
+export async function verifyZarinpalPayment({
+  amountInRial,
+  authority,
+}) {
+  try {
+    const response = await zarinpal.post("/verify.json", {
+      merchant_id: env.ZARINPAL_MERCHANT_ID,
+      amount: amountInRial,
+      authority,
+    });
+
+    const data = response.data.data;
+
+    return {
+      code: data.code,
+      message: data.message,
+      refId: data.ref_id,
+    };
+  } catch (error) {
+    const message =
+      error.response?.data?.errors?.[0]?.message ||
+      error.response?.data?.message ||
+      error.message;
+
+    throw new Error(`Zarinpal payment verification failed: ${message}`);
+  }
+}
