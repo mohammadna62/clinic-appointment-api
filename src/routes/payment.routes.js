@@ -6,6 +6,7 @@ import validate from "../middlewares/validate.middleware.js";
 
 import {
   createPayment,
+  zarinpalCallback,
 } from "../controllers/payment.controller.js";
 
 import {
@@ -13,6 +14,12 @@ import {
 } from "../validators/payment.validator.js";
 
 const router = express.Router();
+
+router
+  .route("/zarinpal/callback")
+  .get(
+    zarinpalCallback,
+  );
 
 router
   .route("/:bookingId")

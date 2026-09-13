@@ -2,8 +2,10 @@ import Payment from "../models/payment.model.js";
 import Booking from "../models/booking.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import AppError from "../errors/app-error.js";
+
 import {
   createPayment as createZarinpalPayment,
+  verifyPayment as verifyZarinpalPayment,
 } from "./zarinpal.service2.js";
 
 export async function createPayment(bookingId, userId) {
@@ -49,9 +51,7 @@ export async function createPayment(bookingId, userId) {
     );
   }
 
-  if (
-    appointment.reservedBy.toString() !== userId.toString()
-  ) {
+  if (appointment.reservedBy.toString() !== userId.toString()) {
     throw new AppError(
       "Appointment is reserved by another patient",
       403,
@@ -87,26 +87,219 @@ export async function createPayment(bookingId, userId) {
   });
 
   try {
-    const paymentRequest = await createZarinpalPayment({
+    const gatewayPayment = await createZarinpalPayment({
       amountInRial: payment.amountInRial,
-      description: `Clinic appointment payment - ${booking._id}`,
+      description: `Clinic appointment - ${booking._id}`,
       mobile: undefined,
     });
 
-    payment.authority = paymentRequest.authority;
+    payment.authority = gatewayPayment.authority;
 
     await payment.save();
 
     return {
       payment,
-      paymentUrl: paymentRequest.paymentUrl,
+      paymentUrl: gatewayPayment.paymentUrl,
     };
   } catch (error) {
     await Payment.findByIdAndDelete(payment._id);
 
     throw new AppError(
-      "Unable to create payment request",
+      "Payment request could not be created",
       502,
     );
   }
+}
+
+export async function verifyPayment(authority, status) {
+  if (!authority) {
+    throw new AppError("Payment authority is required", 400);
+  }
+
+  const payment = await Payment.findOne({ authority });
+
+  if (!payment) {
+    throw new AppError("Payment not found", 404);
+  }
+
+  /*
+   * Idempotency:
+   * A payment that has already been paid must not be processed again.
+   */
+  if (payment.status === "paid") {
+    return {
+      payment,
+      alreadyVerified: true,
+    };
+  }
+
+  /*
+   * User cancelled the payment on the gateway.
+   */
+  if (status !== "OK") {
+    payment.status = "failed";
+    await payment.save();
+
+    const booking = await Booking.findById(payment.booking);
+
+    if (booking && booking.status === "pending") {
+      booking.status = "cancelled";
+      await booking.save();
+    }
+
+    if (booking) {
+      await AvailableAppointment.findOneAndUpdate(
+        {
+          _id: booking.appointment,
+          status: "reserved",
+          reservedBy: booking.patient,
+        },
+        {
+          $set: {
+            status: "available",
+            reservedBy: null,
+            reservedUntil: null,
+          },
+        },
+      );
+    }
+
+    return {
+      payment,
+      alreadyVerified: false,
+      paymentSuccessful: false,
+    };
+  }
+
+  /*
+   * Ask the payment gateway to verify the payment.
+   *
+   * IMPORTANT:
+   * The amount comes from our database.
+   * We never trust an amount from the callback.
+   */
+  const gatewayResult = await verifyZarinpalPayment({
+    amountInRial: payment.amountInRial,
+    authority: payment.authority,
+  });
+
+  if (
+    gatewayResult.code !== 100 &&
+    gatewayResult.code !== 101
+  ) {
+    payment.status = "failed";
+    await payment.save();
+
+    throw new AppError(
+      gatewayResult.message || "Payment verification failed",
+      409,
+    );
+  }
+
+  /*
+   * Code 101 means the gateway considers the payment
+   * already verified.
+   */
+  if (gatewayResult.code === 101) {
+    payment.status = "paid";
+    payment.refId = gatewayResult.refId;
+    payment.paidAt = payment.paidAt ?? new Date();
+
+    await payment.save();
+
+    return {
+      payment,
+      alreadyVerified: true,
+    };
+  }
+
+  const booking = await Booking.findById(payment.booking);
+
+  if (!booking) {
+    throw new AppError(
+      "Booking associated with payment not found",
+      404,
+    );
+  }
+
+  if (booking.status !== "pending") {
+    return {
+      payment,
+      alreadyVerified: false,
+      paymentSuccessful: true,
+    };
+  }
+
+  /*
+   * Atomic transition:
+   *
+   * reserved → booked
+   *
+   * Only if the appointment is still reserved by
+   * the same patient.
+   */
+  const appointment = await AvailableAppointment.findOneAndUpdate(
+    {
+      _id: booking.appointment,
+      status: "reserved",
+      reservedBy: booking.patient,
+      reservedUntil: { $gt: new Date() },
+    },
+    {
+      $set: {
+        status: "booked",
+        reservedBy: null,
+        reservedUntil: null,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  /*
+   * Payment was successful, but the appointment is no longer
+   * available for this booking.
+   *
+   * We must NOT confirm the booking.
+   *
+   * In a real Zarinpal integration this is the point where
+   * refund handling is required.
+   */
+  if (!appointment) {
+    payment.status = "paid";
+    payment.refId = gatewayResult.refId;
+    payment.paidAt = new Date();
+
+    await payment.save();
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    throw new AppError(
+      "Payment was successful, but the appointment is no longer available. Refund is required.",
+      409,
+    );
+  }
+
+  /*
+   * The appointment was successfully locked for this booking.
+   * Now finalize the business documents.
+   */
+  payment.status = "paid";
+  payment.refId = gatewayResult.refId;
+  payment.paidAt = new Date();
+
+  await payment.save();
+
+  booking.status = "confirmed";
+  await booking.save();
+
+  return {
+    payment,
+    booking,
+    appointment,
+    alreadyVerified: false,
+    paymentSuccessful: true,
+  };
 }
