@@ -14,6 +14,7 @@ import {
   getTodayLocalDate,
   addDays,
   getProjectDayOfWeek,
+  getCurrentProjectTimeInMinutes,
 } from "../utils/date.util.js";
 
 export async function generateAppointmentsForDate(doctorId, date) {
@@ -143,12 +144,28 @@ export async function generateNextDayAppointments(
   return appointments;
 }
 
-export async function getAvailableAppointments(page = 1, limit = 20) {
+export async function getAvailableAppointments(
+  page = 1,
+  limit = 20,
+) {
   const skip = (page - 1) * limit;
+
+  const today = getTodayLocalDate();
+  const currentTime = getCurrentProjectTimeInMinutes();
 
   const filter = {
     status: "available",
-    date: { $gte: today },
+    $or: [
+      {
+        date: { $gt: today },
+      },
+      {
+        date: today,
+        startTime: {
+          $gt: minutesToTime(currentTime),
+        },
+      },
+    ],
   };
 
   const [appointments, total] = await Promise.all([
@@ -172,7 +189,8 @@ export async function getAvailableAppointments(page = 1, limit = 20) {
   for (const appointment of appointments) {
     let clinicGroup = groupedAppointments.find(
       (group) =>
-        group.clinic._id.toString() === appointment.clinic._id.toString(),
+        group.clinic._id.toString() ===
+        appointment.clinic._id.toString(),
     );
 
     if (!clinicGroup) {
@@ -186,7 +204,8 @@ export async function getAvailableAppointments(page = 1, limit = 20) {
 
     let doctorGroup = clinicGroup.doctors.find(
       (doctor) =>
-        doctor.doctor._id.toString() === appointment.doctor._id.toString(),
+        doctor.doctor._id.toString() ===
+        appointment.doctor._id.toString(),
     );
 
     if (!doctorGroup) {
@@ -203,10 +222,13 @@ export async function getAvailableAppointments(page = 1, limit = 20) {
 
   return {
     appointments: groupedAppointments,
-    pagination: createPaginationData(page, limit, total),
+    pagination: createPaginationData(
+      page,
+      limit,
+      total,
+    ),
   };
 }
-
 export async function updateAppointmentStatus(appointmentId, status) {
   const appointment = await AvailableAppointment.findById(appointmentId);
 
@@ -253,10 +275,29 @@ export async function reserveAppointment(appointmentId, userId) {
     throw new AppError("User Profile is not completed", 409);
   }
 
-  const reservedUntil = new Date(Date.now() + 10 * 60 * 1000);
+  const today = getTodayLocalDate();
+  const currentTime = getCurrentProjectTimeInMinutes();
+
+  const reservedUntil = new Date(
+    Date.now() + 10 * 60 * 1000,
+  );
 
   const appointment = await AvailableAppointment.findOneAndUpdate(
-    { _id: appointmentId, status: "available" },
+    {
+      _id: appointmentId,
+      status: "available",
+      $or: [
+        {
+          date: { $gt: today },
+        },
+        {
+          date: today,
+          startTime: {
+            $gt: minutesToTime(currentTime),
+          },
+        },
+      ],
+    },
     {
       $set: {
         status: "reserved",
@@ -268,9 +309,14 @@ export async function reserveAppointment(appointmentId, userId) {
       new: true,
     },
   );
+
   if (!appointment) {
-    throw new AppError("Appointment is no longer available", 409);
+    throw new AppError(
+      "Appointment is no longer available",
+      409,
+    );
   }
+
   return appointment;
 }
 
