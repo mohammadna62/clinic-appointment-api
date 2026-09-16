@@ -47,6 +47,16 @@ const bookingSchema = new mongoose.Schema(
       enum: ["pending", "confirmed", "cancelled", "completed"],
       default: "pending",
     },
+    cancellationReason: {
+      type: String,
+      enum: [
+        "payment_timeout",
+        "patient_cancelled",
+        "doctor_cancelled",
+        "admin_cancelled",
+      ],
+      default: null,
+    },
     amountInRial: {
       type: Number,
       required: true,

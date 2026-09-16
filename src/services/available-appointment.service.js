@@ -144,10 +144,7 @@ export async function generateNextDayAppointments(
   return appointments;
 }
 
-export async function getAvailableAppointments(
-  page = 1,
-  limit = 20,
-) {
+export async function getAvailableAppointments(page = 1, limit = 20) {
   const skip = (page - 1) * limit;
 
   const today = getTodayLocalDate();
@@ -189,8 +186,7 @@ export async function getAvailableAppointments(
   for (const appointment of appointments) {
     let clinicGroup = groupedAppointments.find(
       (group) =>
-        group.clinic._id.toString() ===
-        appointment.clinic._id.toString(),
+        group.clinic._id.toString() === appointment.clinic._id.toString(),
     );
 
     if (!clinicGroup) {
@@ -204,8 +200,7 @@ export async function getAvailableAppointments(
 
     let doctorGroup = clinicGroup.doctors.find(
       (doctor) =>
-        doctor.doctor._id.toString() ===
-        appointment.doctor._id.toString(),
+        doctor.doctor._id.toString() === appointment.doctor._id.toString(),
     );
 
     if (!doctorGroup) {
@@ -222,11 +217,7 @@ export async function getAvailableAppointments(
 
   return {
     appointments: groupedAppointments,
-    pagination: createPaginationData(
-      page,
-      limit,
-      total,
-    ),
+    pagination: createPaginationData(page, limit, total),
   };
 }
 export async function updateAppointmentStatus(appointmentId, status) {
@@ -278,9 +269,7 @@ export async function reserveAppointment(appointmentId, userId) {
   const today = getTodayLocalDate();
   const currentTime = getCurrentProjectTimeInMinutes();
 
-  const reservedUntil = new Date(
-    Date.now() + 10 * 60 * 1000,
-  );
+  const reservedUntil = new Date(Date.now() + 10 * 60 * 1000);
 
   const appointment = await AvailableAppointment.findOneAndUpdate(
     {
@@ -311,34 +300,12 @@ export async function reserveAppointment(appointmentId, userId) {
   );
 
   if (!appointment) {
-    throw new AppError(
-      "Appointment is no longer available",
-      409,
-    );
+    throw new AppError("Appointment is no longer available", 409);
   }
 
   return appointment;
 }
 
-export async function releaseExpiredReservations() {
-  const result = await AvailableAppointment.updateMany(
-    {
-      status: "reserved",
-      reservedUntil: {
-        $lte: new Date(),
-      },
-    },
-    {
-      $set: {
-        status: "available",
-        reservedBy: null,
-        reservedUntil: null,
-      },
-    },
-  );
-
-  return result;
-}
 //* Convert Minutes To Time
 function minutesToTime(minutes) {
   const hours = Math.floor(minutes / 60);

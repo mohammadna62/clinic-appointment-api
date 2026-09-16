@@ -8,8 +8,9 @@ import {
   generateAppointmentsForDate,
   generateDoctorAppointments,
   generateNextDayAppointments,
-  releaseExpiredReservations,
 } from "../services/available-appointment.service.js";
+
+import { expireReservations } from "../services/reservation.service.js";
 
 import { getTodayLocalDate, addDays } from "../utils/date.util.js";
 
@@ -40,7 +41,7 @@ export async function recoverMissingAppointments() {
   }).select("_id");
 
   const today = getTodayLocalDate();
-  
+
   const deleteBefore = addDays(today, -2);
 
   await AvailableAppointment.deleteMany({
@@ -127,10 +128,21 @@ export function startReservationExpirationJob() {
     "* * * * *",
     async () => {
       try {
-        await releaseExpiredReservations();
+        const result = await expireReservations();
+
+        if (
+          result.releasedAppointments > 0 ||
+          result.cancelledBookings > 0 ||
+          result.failedPayments > 0
+        ) {
+          console.log(
+            "[Reservation Expiration]",
+            result,
+          );
+        }
       } catch (error) {
         console.error(
-          "[Reservation Job] Failed:",
+          "[Reservation Expiration] Failed:",
           error,
         );
       }
