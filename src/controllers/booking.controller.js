@@ -4,6 +4,7 @@ import {
   createBooking as createBookingService,
   getPatientBookings as getPatientBookingsService,
   getPatientBookingById as getPatientBookingByIdService,
+  cancelPatientBooking as cancelPatientBookingService,
 } from "../services/booking.service.js";
 
 export const createBooking = async (req, res, next) => {
@@ -23,11 +24,7 @@ export const createBooking = async (req, res, next) => {
     next(error);
   }
 };
-export const getPatientBookings = async (
-  req,
-  res,
-  next,
-) => {
+export const getPatientBookings = async (req, res, next) => {
   try {
     const { page, limit } = req.validated.query;
 
@@ -46,11 +43,7 @@ export const getPatientBookings = async (
   }
 };
 
-export const getPatientBookingById = async (
-  req,
-  res,
-  next,
-) => {
+export const getPatientBookingById = async (req, res, next) => {
   try {
     const { bookingId } = req.validated.params;
 
@@ -64,6 +57,23 @@ export const getPatientBookingById = async (
       data: {
         booking,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const cancelPatientBooking = async (req, res, next) => {
+  try {
+    const { bookingId } = req.validated.params;
+
+    const result = await cancelPatientBookingService(
+      bookingId,
+      req.user.userId,
+    );
+
+    return successResponse(res, {
+      message: "Booking cancelled successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

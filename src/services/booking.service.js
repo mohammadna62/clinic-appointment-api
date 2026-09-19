@@ -1,5 +1,6 @@
 import Booking from "../models/booking.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
+import Payment from "./../models/payment.model.js";
 import AppError from "../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
 
@@ -126,4 +127,132 @@ export async function getPatientBookingById(bookingId, userId) {
   }
 
   return booking;
+}
+
+export async function cancelPatientBooking(bookingId, userId) {
+  const booking = await Booking.findById(bookingId);
+
+  if (!booking) {
+    throw new AppError("Booking not found", 404);
+  }
+
+  if (booking.patient.toString() !== userId.toString()) {
+    throw new AppError(
+      "You are not allowed to cancel this booking",
+      403,
+    );
+  }
+
+  if (
+    booking.status !== "pending" &&
+    booking.status !== "confirmed"
+  ) {
+    throw new AppError(
+      "Only pending or confirmed bookings can be cancelled",
+      409,
+    );
+  }
+
+  /*
+   * Build the appointment start time.
+   *
+   * `booking.date` represents the project's local calendar date
+   * stored at UTC midnight.
+   *
+   * `booking.startTime` represents the local appointment time.
+   */
+  const year = booking.date.getUTCFullYear();
+  const month = String(
+    booking.date.getUTCMonth() + 1,
+  ).padStart(2, "0");
+  const day = String(
+    booking.date.getUTCDate(),
+  ).padStart(2, "0");
+
+  const appointmentStart = new Date(
+    `${year}-${month}-${day}T${booking.startTime}:00.000Z`,
+  );
+
+  const now = new Date();
+
+  if (appointmentStart <= now) {
+    throw new AppError(
+      "Booking cannot be cancelled after the appointment has started",
+      409,
+    );
+  }
+
+  /*
+   * Calculate whether the cancellation is at least
+   * 24 hours before the appointment.
+   */
+  const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+
+  const millisecondsUntilAppointment =
+    appointmentStart.getTime() - now.getTime();
+
+  const refundEligible =
+    millisecondsUntilAppointment >= twentyFourHoursInMs;
+
+  /*
+   * If there is a pending payment, it must not remain pending
+   * after the booking is manually cancelled.
+   *
+   * We keep the Payment document for history and mark it failed.
+   */
+  const pendingPayment = await Payment.findOne({
+    booking: booking._id,
+    status: "pending",
+  });
+
+  if (pendingPayment) {
+    pendingPayment.status = "failed";
+
+    await pendingPayment.save();
+  }
+
+  /*
+   * Cancel the booking.
+   */
+  booking.status = "cancelled";
+  booking.cancellationReason = "patient_cancelled";
+
+  await booking.save();
+
+  /*
+   * Release the appointment.
+   *
+   * We intentionally do not blindly update the appointment.
+   * The condition protects us from changing an appointment
+   * that has already moved to another state.
+   *
+   * Both `reserved` and `booked` are valid states here:
+   *
+   * - pending booking  -> reserved appointment
+   * - confirmed booking -> booked appointment
+   */
+  const appointment = await AvailableAppointment.findOneAndUpdate(
+    {
+      _id: booking.appointment,
+      status: {
+        $in: ["reserved", "booked"],
+      },
+    },
+    {
+      $set: {
+        status: "available",
+        reservedBy: null,
+        reservedUntil: null,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  return {
+    booking,
+    appointment,
+    refundEligible,
+  };
 }

@@ -8,9 +8,13 @@ import {
   createBooking,
   getPatientBookings,
   getPatientBookingById,
+  cancelPatientBooking,
 } from "../controllers/booking.controller.js";
 
-import { appointmentIdBookingSchema, bookingIdSchema } from "../validators/booking.validator.js";
+import {
+  appointmentIdBookingSchema,
+  bookingIdSchema,
+} from "../validators/booking.validator.js";
 import { paginationSchema } from "../validators/pagination.validator.js";
 
 const router = express.Router();
@@ -23,7 +27,14 @@ router
     validate(paginationSchema, "query"),
     getPatientBookings,
   );
-
+router
+  .route("/:bookingId/cancel")
+  .post(
+    auth,
+    roleGuard("patient"),
+    validate(bookingIdSchema, "params"),
+    cancelPatientBooking,
+  );
 router
   .route("/:bookingId")
   .get(
@@ -32,6 +43,7 @@ router
     validate(bookingIdSchema, "params"),
     getPatientBookingById,
   );
+
 router
   .route("/:appointmentId")
   .post(
