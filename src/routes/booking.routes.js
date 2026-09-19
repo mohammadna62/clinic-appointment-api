@@ -4,12 +4,34 @@ import auth from "../middlewares/auth.middleware.js";
 import roleGuard from "../middlewares/roleGuard.middleware.js";
 import validate from "../middlewares/validate.middleware.js";
 
-import { createBooking } from "../controllers/booking.controller.js";
+import {
+  createBooking,
+  getPatientBookings,
+  getPatientBookingById,
+} from "../controllers/booking.controller.js";
 
-import { appointmentIdBookingSchema } from "../validators/booking.validator.js";
+import { appointmentIdBookingSchema, bookingIdSchema } from "../validators/booking.validator.js";
+import { paginationSchema } from "../validators/pagination.validator.js";
 
 const router = express.Router();
 
+router
+  .route("/")
+  .get(
+    auth,
+    roleGuard("patient"),
+    validate(paginationSchema, "query"),
+    getPatientBookings,
+  );
+
+router
+  .route("/:bookingId")
+  .get(
+    auth,
+    roleGuard("patient"),
+    validate(bookingIdSchema, "params"),
+    getPatientBookingById,
+  );
 router
   .route("/:appointmentId")
   .post(

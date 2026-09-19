@@ -1,6 +1,7 @@
 import Booking from "../models/booking.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import AppError from "../errors/app-error.js";
+import { createPaginationData } from "./../utils/pagination.util.js";
 
 export async function createBooking(appointmentId, userId) {
   const appointment = await AvailableAppointment.findById(appointmentId);
@@ -65,6 +66,64 @@ export async function createBooking(appointmentId, userId) {
     amountInRial: appointment.price,
     status: "pending",
   });
+
+  return booking;
+}
+
+export async function getPatientBookings(userId, page = 1, limit = 20) {
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    patient: userId,
+  };
+
+  const [bookings, total] = await Promise.all([
+    Booking.find(filter)
+      .populate({
+        path: "doctor",
+        select: "specialty consultationFee",
+        populate: {
+          path: "user",
+          select: "firstName lastName",
+        },
+      })
+      .populate("clinic", "name")
+      .populate("appointment", "date startTime endTime status")
+      .sort({
+        date: -1,
+        startTime: -1,
+      })
+      .skip(skip)
+      .limit(limit),
+
+    Booking.countDocuments(filter),
+  ]);
+
+  return {
+    bookings,
+    pagination: createPaginationData(page, limit, total),
+  };
+}
+
+export async function getPatientBookingById(bookingId, userId) {
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    patient: userId,
+  })
+    .populate({
+      path: "doctor",
+      select: "specialty consultationFee",
+      populate: {
+        path: "user",
+        select: "firstName lastName",
+      },
+    })
+    .populate("clinic", "name")
+    .populate("appointment", "date startTime endTime status");
+
+  if (!booking) {
+    throw new AppError("Booking not found", 404);
+  }
 
   return booking;
 }

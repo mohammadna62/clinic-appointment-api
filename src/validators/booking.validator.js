@@ -3,10 +3,20 @@ import mongoose from "mongoose";
 
 export const appointmentIdBookingSchema = z
   .object({
-    appointmentId: z.string().refine(
+    appointmentId: z
+      .string()
+      .refine((value) => mongoose.isValidObjectId(value), {
+        message: "Invalid appointment ID",
+      }),
+  })
+  .strict();
+
+export const bookingIdSchema = z
+  .object({
+    bookingId: z.string().refine(
       (value) => mongoose.isValidObjectId(value),
       {
-        message: "Invalid appointment ID",
+        message: "Invalid booking ID",
       },
     ),
   })
