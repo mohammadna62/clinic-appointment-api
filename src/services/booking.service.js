@@ -1,4 +1,5 @@
 import Booking from "../models/booking.model.js";
+import Doctor from "./../models/doctor.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import Payment from "./../models/payment.model.js";
 import AppError from "../errors/app-error.js";
@@ -137,16 +138,10 @@ export async function cancelPatientBooking(bookingId, userId) {
   }
 
   if (booking.patient.toString() !== userId.toString()) {
-    throw new AppError(
-      "You are not allowed to cancel this booking",
-      403,
-    );
+    throw new AppError("You are not allowed to cancel this booking", 403);
   }
 
-  if (
-    booking.status !== "pending" &&
-    booking.status !== "confirmed"
-  ) {
+  if (booking.status !== "pending" && booking.status !== "confirmed") {
     throw new AppError(
       "Only pending or confirmed bookings can be cancelled",
       409,
@@ -162,12 +157,8 @@ export async function cancelPatientBooking(bookingId, userId) {
    * `booking.startTime` represents the local appointment time.
    */
   const year = booking.date.getUTCFullYear();
-  const month = String(
-    booking.date.getUTCMonth() + 1,
-  ).padStart(2, "0");
-  const day = String(
-    booking.date.getUTCDate(),
-  ).padStart(2, "0");
+  const month = String(booking.date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(booking.date.getUTCDate()).padStart(2, "0");
 
   const appointmentStart = new Date(
     `${year}-${month}-${day}T${booking.startTime}:00.000Z`,
@@ -191,8 +182,7 @@ export async function cancelPatientBooking(bookingId, userId) {
   const millisecondsUntilAppointment =
     appointmentStart.getTime() - now.getTime();
 
-  const refundEligible =
-    millisecondsUntilAppointment >= twentyFourHoursInMs;
+  const refundEligible = millisecondsUntilAppointment >= twentyFourHoursInMs;
 
   /*
    * If there is a pending payment, it must not remain pending
@@ -255,4 +245,56 @@ export async function cancelPatientBooking(bookingId, userId) {
     appointment,
     refundEligible,
   };
+}
+export async function getDoctorBookings(userId, page = 1, limit = 20) {
+  const currentDoctor = await Doctor.findOne({ user: userId });
+  if (!currentDoctor) {
+    throw new AppError("Doctor profile not found", 404);
+  }
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    doctor: currentDoctor._id,
+  };
+
+  const [bookings, total] = await Promise.all([
+    Booking.find(filter)
+      .populate("patient", "firstName lastName phone")
+      .populate("clinic", "name")
+      .populate("appointment", "date startTime endTime status")
+      .sort({
+        date: -1,
+        startTime: -1,
+      })
+      .skip(skip)
+      .limit(limit),
+
+    Booking.countDocuments(filter),
+  ]);
+
+  return {
+    bookings,
+    pagination: createPaginationData(page, limit, total),
+  };
+}
+
+export async function getDoctorBookingById(bookingId, userId) {
+  const currentDoctor = await Doctor.findOne({ user: userId });
+  if (!currentDoctor) {
+    throw new AppError("Doctor profile not found", 404);
+  }
+
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    doctor: currentDoctor._id,
+  })
+    .populate("patient", "firstName lastName phone")
+    .populate("clinic", "name")
+    .populate("appointment", "date startTime endTime status");
+
+  if (!booking) {
+    throw new AppError("Booking not found", 404);
+  }
+
+  return booking;
 }

@@ -11,7 +11,12 @@ import {
   updateDoctor,
 } from "../controllers/doctor.controller.js";
 
-import {getDoctorSchedulesForPatient} from "./../controllers/doctor-schedule.controller.js"
+import {
+  getDoctorBookings,
+  getDoctorBookingById,
+} from "../controllers/booking.controller.js";
+
+import { getDoctorSchedulesForPatient } from "./../controllers/doctor-schedule.controller.js";
 
 import {
   createDoctorSchema,
@@ -19,6 +24,9 @@ import {
   updateDoctorSchema,
 } from "./../validators/doctor.validator.js";
 
+import { bookingIdSchema } from "./../validators/booking.validator.js";
+
+import {paginationSchema} from "./../validators/pagination.validator.js"
 
 const router = express.Router();
 
@@ -32,6 +40,7 @@ router
     createDoctor,
   );
 
+// Static routes first
 router
   .route("/profile")
   .patch(
@@ -43,6 +52,25 @@ router
   );
 
 router
+  .route("/bookings")
+  .get(
+    auth,
+    roleGuard("doctor"),
+    validate(paginationSchema, "query"),
+    getDoctorBookings,
+  );
+
+router
+  .route("/bookings/:bookingId")
+  .get(
+    auth,
+    roleGuard("doctor"),
+    validate(bookingIdSchema, "params"),
+    getDoctorBookingById,
+  );
+
+// Dynamic routes after static routes
+router
   .route("/:doctorId")
   .get(
     auth,
@@ -50,6 +78,7 @@ router
     validate(doctorIdSchema, "params"),
     getDoctorById,
   );
+
 router
   .route("/:doctorId/schedules")
   .get(
@@ -58,4 +87,5 @@ router
     validate(doctorIdSchema, "params"),
     getDoctorSchedulesForPatient,
   );
+
 export default router;
