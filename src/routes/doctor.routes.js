@@ -14,6 +14,7 @@ import {
 import {
   getDoctorBookings,
   getDoctorBookingById,
+  completeDoctorBooking,
 } from "../controllers/booking.controller.js";
 
 import { getDoctorSchedulesForPatient } from "./../controllers/doctor-schedule.controller.js";
@@ -26,7 +27,7 @@ import {
 
 import { bookingIdSchema } from "./../validators/booking.validator.js";
 
-import {paginationSchema} from "./../validators/pagination.validator.js"
+import { paginationSchema } from "./../validators/pagination.validator.js";
 
 const router = express.Router();
 
@@ -59,6 +60,16 @@ router
     validate(paginationSchema, "query"),
     getDoctorBookings,
   );
+
+  router
+  .route("/bookings/:bookingId/complete")
+  .post(
+    auth,
+    roleGuard("doctor"),
+    validate(bookingIdSchema, "params"),
+    completeDoctorBooking,
+  );
+
 
 router
   .route("/bookings/:bookingId")

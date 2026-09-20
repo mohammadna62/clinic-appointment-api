@@ -298,3 +298,51 @@ export async function getDoctorBookingById(bookingId, userId) {
 
   return booking;
 }
+
+export async function completeDoctorBooking(bookingId, userId) {
+  const currentDoctor = await Doctor.findOne({
+    user: userId,
+  });
+
+  if (!currentDoctor) {
+    throw new AppError("Doctor profile not found", 404);
+  }
+
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    doctor: currentDoctor._id,
+  });
+
+  if (!booking) {
+    throw new AppError("Booking not found", 404);
+  }
+
+  if (booking.status !== "confirmed") {
+    throw new AppError("Only confirmed bookings can be completed", 409);
+  }
+
+  const year = booking.date.getUTCFullYear();
+
+  const month = String(booking.date.getUTCMonth() + 1).padStart(2, "0");
+
+  const day = String(booking.date.getUTCDate()).padStart(2, "0");
+
+  const appointmentStart = new Date(
+    `${year}-${month}-${day}T${booking.startTime}:00.000Z`,
+  );
+
+  const now = new Date();
+
+  if (appointmentStart > now) {
+    throw new AppError(
+      "Booking cannot be completed before the appointment starts",
+      409,
+    );
+  }
+
+  booking.status = "completed";
+
+  await booking.save();
+
+  return booking;
+}

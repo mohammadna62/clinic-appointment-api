@@ -7,6 +7,7 @@ import {
   cancelPatientBooking as cancelPatientBookingService,
   getDoctorBookings as getDoctorBookingsService,
   getDoctorBookingById as getDoctorBookingByIdService,
+  completeDoctorBooking as completeDoctorBookingService,
 } from "../services/booking.service.js";
 
 export const createBooking = async (req, res, next) => {
@@ -107,11 +108,30 @@ export const getDoctorBookingById = async (req, res, next) => {
       bookingId,
       req.user.userId,
     );
-   
-    
+
     return successResponse(res, {
       message: "Booking retrieved successfully",
-      data: {booking},
+      data: { booking },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const completeDoctorBooking = async (req, res, next) => {
+  try {
+    const { bookingId } = req.validated.params;
+
+    const booking = await completeDoctorBookingService(
+      bookingId,
+      req.user.userId,
+    );
+
+    return successResponse(res, {
+      message: "Booking completed successfully",
+      data: {
+        booking,
+      },
     });
   } catch (error) {
     next(error);
