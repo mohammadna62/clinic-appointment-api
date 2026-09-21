@@ -8,6 +8,7 @@ import {
   getDoctorBookings as getDoctorBookingsService,
   getDoctorBookingById as getDoctorBookingByIdService,
   completeDoctorBooking as completeDoctorBookingService,
+  markPatientNoShow as markPatientNoShowService,
 } from "../services/booking.service.js";
 
 export const createBooking = async (req, res, next) => {
@@ -129,6 +130,23 @@ export const completeDoctorBooking = async (req, res, next) => {
 
     return successResponse(res, {
       message: "Booking completed successfully",
+      data: {
+        booking,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markPatientNoShow = async (req, res, next) => {
+  try {
+    const { bookingId } = req.validated.params;
+
+    const booking = await markPatientNoShowService(bookingId, req.user.userId);
+
+    return successResponse(res, {
+      message: "Patient marked as no-show successfully",
       data: {
         booking,
       },

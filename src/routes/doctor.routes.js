@@ -15,6 +15,7 @@ import {
   getDoctorBookings,
   getDoctorBookingById,
   completeDoctorBooking,
+  markPatientNoShow,
 } from "../controllers/booking.controller.js";
 
 import { getDoctorSchedulesForPatient } from "./../controllers/doctor-schedule.controller.js";
@@ -61,7 +62,7 @@ router
     getDoctorBookings,
   );
 
-  router
+router
   .route("/bookings/:bookingId/complete")
   .post(
     auth,
@@ -69,7 +70,14 @@ router
     validate(bookingIdSchema, "params"),
     completeDoctorBooking,
   );
-
+router
+  .route("/bookings/:bookingId/no-show")
+  .post(
+    auth,
+    roleGuard("doctor"),
+    validate(bookingIdSchema, "params"),
+    markPatientNoShow,
+  );
 
 router
   .route("/bookings/:bookingId")
