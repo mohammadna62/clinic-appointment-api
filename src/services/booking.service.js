@@ -347,19 +347,13 @@ export async function completeDoctorBooking(bookingId, userId) {
   return booking;
 }
 
-export async function markPatientNoShow(
-  bookingId,
-  userId,
-) {
+export async function markPatientNoShow(bookingId, userId) {
   const currentDoctor = await Doctor.findOne({
     user: userId,
   });
 
   if (!currentDoctor) {
-    throw new AppError(
-      "Doctor profile not found",
-      404,
-    );
+    throw new AppError("Doctor profile not found", 404);
   }
 
   const booking = await Booking.findOne({
@@ -368,10 +362,7 @@ export async function markPatientNoShow(
   });
 
   if (!booking) {
-    throw new AppError(
-      "Booking not found",
-      404,
-    );
+    throw new AppError("Booking not found", 404);
   }
 
   if (booking.status !== "confirmed") {
@@ -383,13 +374,9 @@ export async function markPatientNoShow(
 
   const year = booking.date.getUTCFullYear();
 
-  const month = String(
-    booking.date.getUTCMonth() + 1,
-  ).padStart(2, "0");
+  const month = String(booking.date.getUTCMonth() + 1).padStart(2, "0");
 
-  const day = String(
-    booking.date.getUTCDate(),
-  ).padStart(2, "0");
+  const day = String(booking.date.getUTCDate()).padStart(2, "0");
 
   const appointmentStart = new Date(
     `${year}-${month}-${day}T${booking.startTime}:00.000Z`,
@@ -407,6 +394,63 @@ export async function markPatientNoShow(
   booking.status = "patient_no_show";
 
   await booking.save();
+
+  return booking;
+}
+export async function getAdminBookings(page = 1, limit = 20, status) {
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  const [bookings, total] = await Promise.all([
+    Booking.find(filter)
+      .populate("patient", "firstName lastName phone")
+      .populate({
+        path: "doctor",
+        select: "specialty consultationFee",
+        populate: {
+          path: "user",
+          select: "firstName lastName phone",
+        },
+      })
+      .populate("clinic", "name")
+      .populate("appointment", "date startTime endTime status")
+      .sort({
+        date: -1,
+        startTime: -1,
+      })
+      .skip(skip)
+      .limit(limit),
+
+    Booking.countDocuments(filter),
+  ]);
+
+  return {
+    bookings,
+    pagination: createPaginationData(page, limit, total),
+  };
+}
+export async function getAdminBookingById(bookingId) {
+  const booking = await Booking.findById(bookingId)
+    .populate("patient", "firstName lastName phone")
+    .populate({
+      path: "doctor",
+      select: "specialty consultationFee",
+      populate: {
+        path: "user",
+        select: "firstName lastName phone",
+      },
+    })
+    .populate("clinic", "name")
+    .populate("appointment", "date startTime endTime status");
+
+  if (!booking) {
+    throw new AppError("Booking not found", 404);
+  }
 
   return booking;
 }

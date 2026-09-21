@@ -9,6 +9,8 @@ import {
   getDoctorBookingById as getDoctorBookingByIdService,
   completeDoctorBooking as completeDoctorBookingService,
   markPatientNoShow as markPatientNoShowService,
+  getAdminBookings as getAdminBookingsService,
+  getAdminBookingById as getAdminBookingByIdService,
 } from "../services/booking.service.js";
 
 export const createBooking = async (req, res, next) => {
@@ -150,6 +152,35 @@ export const markPatientNoShow = async (req, res, next) => {
       data: {
         booking,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const getAdminBookings = async (req, res, next) => {
+  try {
+    const { page, limit, status } = req.validated.query;
+
+    const result = await getAdminBookingsService(page, limit, status);
+
+    return successResponse(res, {
+      message: "Admin bookings retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminBookingById = async (req, res, next) => {
+  try {
+    const { bookingId } = req.validated.params;
+
+    const booking = await getAdminBookingByIdService(bookingId);
+
+    return successResponse(res, {
+      message: "Booking retrieved successfully",
+      data: { booking },
     });
   } catch (error) {
     next(error);

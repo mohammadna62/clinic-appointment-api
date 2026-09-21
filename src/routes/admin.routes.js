@@ -1,25 +1,33 @@
 import express from "express";
+
 import auth from "./../middlewares/auth.middleware.js";
 import roleGuard from "./../middlewares/roleGuard.middleware.js";
-import { getUser, deleteUser } from "./../controllers/user.controller.js";
+import upload from "../middlewares/upload.middleware.js";
+
+import { getUser, deleteUser } from "../controllers/user.controller.js";
 
 //* Validator
-import validate from "./../middlewares/validate.middleware.js";
+
+import validate from "../middlewares/validate.middleware.js";
+
 import {
   getUsersQuerySchema,
   userIdSchema,
-} from "./../validators/user.validator.js";
+} from "../validators/user.validator.js";
+
 import {
   doctorIdSchema,
   getDoctorsQuerySchema,
   updateDoctorSchema,
   updateDoctorStatusSchema,
 } from "../validators/doctor.validator.js";
+
 import {
   clinicTimePolicyClinicIdSchema,
   createClinicTimePolicySchema,
   updateClinicTimePolicySchema,
 } from "../validators/clinic-time-policy.validator.js";
+
 import {
   weeklyScheduleClinicIdSchema,
   weeklyScheduleIdSchema,
@@ -33,12 +41,18 @@ import {
   createDoctorScheduleSchema,
   updateDoctorScheduleSchema,
 } from "./../validators/doctor-schedule.validator.js";
+
 import {
   doctorIdAppointmentSchema,
   generateAppointmentForDateSchema,
   appointmentIdSchema,
   updateAppointmentStatusSchema,
 } from "../validators/available-appointment.validator.js";
+
+import {
+  adminBookingQuerySchema,
+  bookingIdSchema,
+} from "../validators/booking.validator.js";
 
 //* Controller
 
@@ -67,17 +81,22 @@ import {
   updateDoctorSchedule,
   deleteDoctorSchedule,
 } from "./../controllers/doctor-schedule.controller.js";
+
 import {
   generateAppointments,
   generateDoctorAppointments,
   updateAppointmentStatus,
 } from "../controllers/available-appointment.controller.js";
 
-import upload from "../middlewares/upload.middleware.js";
+import {
+  getAdminBookings,
+  getAdminBookingById,
+} from "../controllers/booking.controller.js";
 
 const router = express.Router();
 
 //* User Routes
+
 router
   .route("/users")
   .get(
@@ -86,6 +105,7 @@ router
     validate(getUsersQuerySchema, "query"),
     getUser,
   );
+
 router
   .route("/users/:userId")
   .delete(
@@ -94,7 +114,9 @@ router
     validate(userIdSchema, "params"),
     deleteUser,
   );
+
 //* Doctor Routes
+
 router
   .route("/doctors")
   .get(
@@ -103,15 +125,7 @@ router
     validate(getDoctorsQuerySchema, "query"),
     getDoctors,
   );
-router
-  .route("/doctors/:doctorId/status")
-  .patch(
-    auth,
-    roleGuard("admin"),
-    validate(doctorIdSchema, "params"),
-    validate(updateDoctorStatusSchema, "body"),
-    updateDoctorStatus,
-  );
+
 router
   .route("/doctors/:doctorId")
   .patch(
@@ -122,7 +136,53 @@ router
     validate(updateDoctorSchema, "body"),
     updateDoctorByAdmin,
   );
+
+router
+  .route("/doctors/:doctorId/status")
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(doctorIdSchema, "params"),
+    validate(updateDoctorStatusSchema, "body"),
+    updateDoctorStatus,
+  );
+
+//* Doctor Schedule Routes
+
+router
+  .route("/doctors/:doctorId/schedules")
+  .post(
+    auth,
+    roleGuard("admin"),
+    validate(doctorIdScheduleSchema, "params"),
+    validate(createDoctorScheduleSchema, "body"),
+    createDoctorSchedule,
+  )
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(doctorIdScheduleSchema, "params"),
+    getDoctorSchedules,
+  );
+
+router
+  .route("/doctors/:doctorId/schedules/:scheduleId")
+  .patch(
+    auth,
+    roleGuard("admin"),
+    validate(doctorScheduleParamsSchema, "params"),
+    validate(updateDoctorScheduleSchema, "body"),
+    updateDoctorSchedule,
+  )
+  .delete(
+    auth,
+    roleGuard("admin"),
+    validate(doctorScheduleParamsSchema, "params"),
+    deleteDoctorSchedule,
+  );
+
 //* Clinic Routes
+
 router
   .route("/clinics/:clinicId/time-policy")
   .post(
@@ -178,38 +238,8 @@ router
     deleteWeeklySchedule,
   );
 
-//* Doctor Schedule Routes
-router
-  .route("/doctors/:doctorId/schedules")
-  .post(
-    auth,
-    roleGuard("admin"),
-    validate(doctorIdScheduleSchema, "params"),
-    validate(createDoctorScheduleSchema, "body"),
-    createDoctorSchedule,
-  )
-  .get(
-    auth,
-    roleGuard("admin"),
-    validate(doctorIdScheduleSchema, "params"),
-    getDoctorSchedules,
-  );
-router
-  .route("/doctors/:doctorId/schedules/:scheduleId")
-  .patch(
-    auth,
-    roleGuard("admin"),
-    validate(doctorScheduleParamsSchema, "params"),
-    validate(updateDoctorScheduleSchema, "body"),
-    updateDoctorSchedule,
-  )
-  .delete(
-    auth,
-    roleGuard("admin"),
-    validate(doctorScheduleParamsSchema, "params"),
-    deleteDoctorSchedule,
-  );
 //* Appointment Routes
+
 router
   .route("/available-appointments/generate/:doctorId")
   .post(
@@ -228,7 +258,8 @@ router
     validate(doctorIdAppointmentSchema, "params"),
     generateDoctorAppointments,
   );
-  router
+
+router
   .route("/available-appointments/:appointmentId/status")
   .patch(
     auth,
@@ -237,4 +268,25 @@ router
     validate(updateAppointmentStatusSchema, "body"),
     updateAppointmentStatus,
   );
+
+//* Booking Routes
+
+router
+  .route("/bookings")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(adminBookingQuerySchema, "query"),
+    getAdminBookings,
+  );
+
+router
+  .route("/bookings/:bookingId")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(bookingIdSchema, "params"),
+    getAdminBookingById,
+  );
+
 export default router;
