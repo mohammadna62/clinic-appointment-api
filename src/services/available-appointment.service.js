@@ -306,6 +306,42 @@ export async function reserveAppointment(appointmentId, userId) {
   return appointment;
 }
 
+export async function getAdminAppointments(page = 1, limit = 20, status) {
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  const [appointments, total] = await Promise.all([
+    AvailableAppointment.find(filter)
+      .populate({
+        path: "doctor",
+        select: "specialty consultationFee",
+        populate: {
+          path: "user",
+          select: "firstName lastName phone",
+        },
+      })
+      .populate("clinic", "name")
+      .populate("reservedBy", "firstName lastName phone")
+      .sort({
+        date: 1,
+        startTime: 1,
+      })
+      .skip(skip)
+      .limit(limit),
+
+    AvailableAppointment.countDocuments(filter),
+  ]);
+
+  return {
+    appointments,
+    pagination: createPaginationData(page, limit, total),
+  };
+}
 //* Convert Minutes To Time
 function minutesToTime(minutes) {
   const hours = Math.floor(minutes / 60);

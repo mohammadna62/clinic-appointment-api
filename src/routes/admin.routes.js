@@ -47,6 +47,7 @@ import {
   generateAppointmentForDateSchema,
   appointmentIdSchema,
   updateAppointmentStatusSchema,
+  adminAppointmentQuerySchema,
 } from "../validators/available-appointment.validator.js";
 
 import {
@@ -86,6 +87,7 @@ import {
   generateAppointments,
   generateDoctorAppointments,
   updateAppointmentStatus,
+  getAdminAppointments,
 } from "../controllers/available-appointment.controller.js";
 
 import {
@@ -268,7 +270,14 @@ router
     validate(updateAppointmentStatusSchema, "body"),
     updateAppointmentStatus,
   );
-
+router
+  .route("/appointments")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(adminAppointmentQuerySchema, "query"),
+    getAdminAppointments,
+  );
 //* Booking Routes
 
 router

@@ -4,6 +4,7 @@ import {
   getAvailableAppointments as getAvailableAppointmentsService,
   updateAppointmentStatus as updateAppointmentStatusService,
   reserveAppointment as reserveAppointmentService,
+  getAdminAppointments as getAdminAppointmentsService,
 } from "../services/available-appointment.service.js";
 
 import { successResponse } from "../helpers/response.js";
@@ -102,3 +103,18 @@ export const reserveAppointment = async (req, res, next) => {
     next(error);
   }
 };
+export const getAdminAppointments = async (req, res, next) => {
+  try {
+    const { page, limit, status } = req.validated.query;
+
+    const result = await getAdminAppointmentsService(page, limit, status);
+
+    return successResponse(res, {
+      message: "Appointments retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
