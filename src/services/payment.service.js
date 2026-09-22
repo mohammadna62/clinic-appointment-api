@@ -8,6 +8,10 @@ import {
   verifyZarinpalPayment,
 } from "./zarinpal.service.js";
 
+
+import {createPaginationData} from "./../utils/pagination.util.js"
+
+
 export async function createPayment(bookingId, userId) {
   const booking = await Booking.findById(bookingId);
 
@@ -16,56 +20,33 @@ export async function createPayment(bookingId, userId) {
   }
 
   if (booking.patient.toString() !== userId.toString()) {
-    throw new AppError(
-      "You are not allowed to pay for this booking",
-      403,
-    );
+    throw new AppError("You are not allowed to pay for this booking", 403);
   }
 
   if (booking.status !== "pending") {
-    throw new AppError(
-      "Only pending bookings can be paid",
-      409,
-    );
+    throw new AppError("Only pending bookings can be paid", 409);
   }
 
-  const appointment = await AvailableAppointment.findById(
-    booking.appointment,
-  );
+  const appointment = await AvailableAppointment.findById(booking.appointment);
 
   if (!appointment) {
     throw new AppError("Appointment not found", 404);
   }
 
   if (appointment.status !== "reserved") {
-    throw new AppError(
-      "Appointment is no longer reserved",
-      409,
-    );
+    throw new AppError("Appointment is no longer reserved", 409);
   }
 
   if (!appointment.reservedBy) {
-    throw new AppError(
-      "Appointment is not reserved by any patient",
-      409,
-    );
+    throw new AppError("Appointment is not reserved by any patient", 409);
   }
 
   if (appointment.reservedBy.toString() !== userId.toString()) {
-    throw new AppError(
-      "Appointment is reserved by another patient",
-      403,
-    );
+    throw new AppError("Appointment is reserved by another patient", 403);
   }
 
-  if (
-    !appointment.reservedUntil ||
-    appointment.reservedUntil <= new Date()
-  ) {
-    throw new AppError(
-      "Appointment reservation has expired",
-      409,
-    );
+  if (!appointment.reservedUntil || appointment.reservedUntil <= new Date()) {
+    throw new AppError("Appointment reservation has expired", 409);
   }
 
   const existingPayment = await Payment.findOne({
@@ -73,10 +54,7 @@ export async function createPayment(bookingId, userId) {
   });
 
   if (existingPayment) {
-    throw new AppError(
-      "A payment already exists for this booking",
-      409,
-    );
+    throw new AppError("A payment already exists for this booking", 409);
   }
 
   const payment = await Payment.create({
@@ -104,10 +82,7 @@ export async function createPayment(bookingId, userId) {
   } catch (error) {
     await Payment.findByIdAndDelete(payment._id);
 
-    throw new AppError(
-      "Payment request could not be created",
-      502,
-    );
+    throw new AppError("Payment request could not be created", 502);
   }
 }
 
@@ -183,10 +158,7 @@ export async function verifyPayment(authority, status) {
     authority: payment.authority,
   });
 
-  if (
-    gatewayResult.code !== 100 &&
-    gatewayResult.code !== 101
-  ) {
+  if (gatewayResult.code !== 100 && gatewayResult.code !== 101) {
     payment.status = "failed";
     await payment.save();
 
@@ -216,10 +188,7 @@ export async function verifyPayment(authority, status) {
   const booking = await Booking.findById(payment.booking);
 
   if (!booking) {
-    throw new AppError(
-      "Booking associated with payment not found",
-      404,
-    );
+    throw new AppError("Booking associated with payment not found", 404);
   }
 
   if (booking.status !== "pending") {
@@ -302,4 +271,76 @@ export async function verifyPayment(authority, status) {
     alreadyVerified: false,
     paymentSuccessful: true,
   };
+}
+
+export async function getAdminPayments(page = 1, limit = 20, status) {
+  const skip = (page - 1) * limit;
+
+  const filter = {};
+
+  if (status) {
+    filter.status = status;
+  }
+
+  const [payments, total] = await Promise.all([
+    Payment.find(filter)
+      .populate("patient", "firstName lastName phone")
+      .populate({
+        path: "booking",
+        select: "doctor clinic date startTime endTime status amountInRial",
+        populate: [
+          {
+            path: "doctor",
+            select: "specialty",
+            populate: {
+              path: "user",
+              select: "firstName lastName",
+            },
+          },
+          {
+            path: "clinic",
+            select: "name",
+          },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Payment.countDocuments(filter),
+  ]);
+
+  return {
+    payments,
+    pagination: createPaginationData(page, limit, total),
+  };
+}
+export async function getAdminPaymentById(paymentId) {
+  const payment = await Payment.findById(paymentId)
+    .populate("patient", "firstName lastName phone")
+    .populate({
+      path: "booking",
+      select:
+        "doctor clinic date startTime endTime status amountInRial",
+      populate: [
+        {
+          path: "doctor",
+          select: "specialty",
+          populate: {
+            path: "user",
+            select: "firstName lastName",
+          },
+        },
+        {
+          path: "clinic",
+          select: "name",
+        },
+      ],
+    });
+
+  if (!payment) {
+    throw new AppError("Payment not found", 404);
+  }
+
+  return payment;
 }

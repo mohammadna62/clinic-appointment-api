@@ -55,6 +55,10 @@ import {
   bookingIdSchema,
 } from "../validators/booking.validator.js";
 
+import {
+   paymentIdSchema,
+  adminPaymentQuerySchema,
+} from "../validators/payment.validator.js";
 //* Controller
 
 import {
@@ -94,6 +98,11 @@ import {
   getAdminBookings,
   getAdminBookingById,
 } from "../controllers/booking.controller.js";
+
+import {
+  getAdminPayments,
+  getAdminPaymentById,
+} from "./../controllers/payment.controller.js";
 
 const router = express.Router();
 
@@ -297,5 +306,22 @@ router
     validate(bookingIdSchema, "params"),
     getAdminBookingById,
   );
+//* Payment Routes
+router
+  .route("/payments")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(adminPaymentQuerySchema, "query"),
+    getAdminPayments,
+  );
 
+router
+  .route("/payments/:paymentId")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(paymentIdSchema, "params"),
+    getAdminPaymentById,
+  );
 export default router;
