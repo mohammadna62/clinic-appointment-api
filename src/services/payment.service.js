@@ -8,9 +8,7 @@ import {
   verifyZarinpalPayment,
 } from "./zarinpal.service.js";
 
-
-import {createPaginationData} from "./../utils/pagination.util.js"
-
+import { createPaginationData } from "./../utils/pagination.util.js";
 
 export async function createPayment(bookingId, userId) {
   const booking = await Booking.findById(bookingId);
@@ -168,11 +166,13 @@ export async function verifyPayment(authority, status) {
     );
   }
 
-  /*
-   * Code 101 means the gateway considers the payment
-   * already verified.
-   */
-  if (gatewayResult.code === 101) {
+  const booking = await Booking.findById(payment.booking);
+
+  if (!booking) {
+    throw new AppError("Booking associated with payment not found", 404);
+  }
+
+  if (booking.status !== "pending") {
     payment.status = "paid";
     payment.refId = gatewayResult.refId;
     payment.paidAt = payment.paidAt ?? new Date();
@@ -182,19 +182,6 @@ export async function verifyPayment(authority, status) {
     return {
       payment,
       alreadyVerified: true,
-    };
-  }
-
-  const booking = await Booking.findById(payment.booking);
-
-  if (!booking) {
-    throw new AppError("Booking associated with payment not found", 404);
-  }
-
-  if (booking.status !== "pending") {
-    return {
-      payment,
-      alreadyVerified: false,
       paymentSuccessful: true,
     };
   }
@@ -238,11 +225,13 @@ export async function verifyPayment(authority, status) {
   if (!appointment) {
     payment.status = "paid";
     payment.refId = gatewayResult.refId;
-    payment.paidAt = new Date();
+    payment.paidAt = payment.paidAt ?? new Date();
 
     await payment.save();
 
     booking.status = "cancelled";
+    booking.cancellationReason = "payment_timeout";
+
     await booking.save();
 
     throw new AppError(
@@ -250,25 +239,25 @@ export async function verifyPayment(authority, status) {
       409,
     );
   }
-
   /*
    * The appointment was successfully locked for this booking.
    * Now finalize the business documents.
    */
   payment.status = "paid";
   payment.refId = gatewayResult.refId;
-  payment.paidAt = new Date();
+  payment.paidAt = payment.paidAt ?? new Date();
 
   await payment.save();
 
   booking.status = "confirmed";
+
   await booking.save();
 
   return {
     payment,
     booking,
     appointment,
-    alreadyVerified: false,
+    alreadyVerified: gatewayResult.code === 101,
     paymentSuccessful: true,
   };
 }
@@ -320,8 +309,7 @@ export async function getAdminPaymentById(paymentId) {
     .populate("patient", "firstName lastName phone")
     .populate({
       path: "booking",
-      select:
-        "doctor clinic date startTime endTime status amountInRial",
+      select: "doctor clinic date startTime endTime status amountInRial",
       populate: [
         {
           path: "doctor",

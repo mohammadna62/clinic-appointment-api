@@ -21,6 +21,6 @@ export const adminPaymentQuerySchema = z
 
     limit: z.coerce.number().int().min(1).max(100).default(20),
 
-    status: z.enum(["pending", "paid", "failed"]).optional(),
+    status: z.enum(["pending", "paid", "failed","refunded"]).optional(),
   })
   .strict();
