@@ -56,7 +56,7 @@ import {
 } from "../validators/booking.validator.js";
 
 import {
-   paymentIdSchema,
+  paymentIdSchema,
   adminPaymentQuerySchema,
 } from "../validators/payment.validator.js";
 //* Controller
@@ -104,9 +104,12 @@ import {
   getAdminPaymentById,
 } from "./../controllers/payment.controller.js";
 
+import { getAdminStatistics } from "../controllers/admin-statistics.controller.js";
+
 const router = express.Router();
 
 //* User Routes
+router.route("/statistics").get(auth, roleGuard("admin"), getAdminStatistics);
 
 router
   .route("/users")
@@ -324,4 +327,5 @@ router
     validate(paymentIdSchema, "params"),
     getAdminPaymentById,
   );
+
 export default router;
