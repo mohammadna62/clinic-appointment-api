@@ -59,6 +59,9 @@ import {
   paymentIdSchema,
   adminPaymentQuerySchema,
 } from "../validators/payment.validator.js";
+
+import { statisticsQuerySchema } from "../validators/statistics.validator.js";
+
 //* Controller
 
 import {
@@ -108,9 +111,17 @@ import { getAdminStatistics } from "../controllers/admin-statistics.controller.j
 
 const router = express.Router();
 
-//* User Routes
-router.route("/statistics").get(auth, roleGuard("admin"), getAdminStatistics);
+//* Statistic Routes
+router
+  .route("/statistics")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(statisticsQuerySchema, "query"),
+    getAdminStatistics,
+  );
 
+//* User Routes
 router
   .route("/users")
   .get(

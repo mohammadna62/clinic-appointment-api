@@ -3,8 +3,11 @@ import Payment from "../models/payment.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
 import Doctor from "../models/doctor.model.js";
 import User from "../models/user.model.js";
+import { getStatisticsDateRange } from "../utils/statistics.util.js";
 
-export async function getAdminStatistics() {
+export async function getAdminStatistics(period = "month") {
+  const { startDate, endDate } = getStatisticsDateRange(period);
+
   const [
     bookingStatistics,
     paymentStatistics,
@@ -13,6 +16,14 @@ export async function getAdminStatistics() {
     userStatistics,
   ] = await Promise.all([
     Booking.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      },
       {
         $group: {
           _id: "$status",
@@ -23,6 +34,14 @@ export async function getAdminStatistics() {
 
     Payment.aggregate([
       {
+        $match: {
+          createdAt: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      },
+      {
         $group: {
           _id: "$status",
           count: { $sum: 1 },
@@ -31,6 +50,14 @@ export async function getAdminStatistics() {
     ]),
 
     AvailableAppointment.aggregate([
+      {
+        $match: {
+          date: {
+            $gte: startDate,
+            $lte: endDate,
+          },
+        },
+      },
       {
         $group: {
           _id: "$status",
@@ -139,8 +166,16 @@ export async function getAdminStatistics() {
       users.admins = item.count;
     }
   }
-  users.total = users.patients + users.doctors + users.admins;
+
+  users.total =
+    users.patients +
+    users.doctors +
+    users.admins;
+
   return {
+    period,
+    startDate,
+    endDate,
     bookings,
     payments,
     appointments,

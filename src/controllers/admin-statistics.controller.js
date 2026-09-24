@@ -3,7 +3,10 @@ import { getAdminStatistics as getAdminStatisticsService } from "../services/adm
 
 export const getAdminStatistics = async (req, res, next) => {
   try {
-    const statistics = await getAdminStatisticsService();
+    const { period } = req.validated.query;
+
+    const statistics =
+      await getAdminStatisticsService(period);
 
     return successResponse(res, {
       message: "Admin statistics retrieved successfully",

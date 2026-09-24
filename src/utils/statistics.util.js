@@ -27,6 +27,10 @@ export function getStatisticsDateRange(period = "month") {
       startDate.setFullYear(startDate.getFullYear() - 1);
       break;
 
+    case "5years":
+      startDate.setFullYear(startDate.getFullYear() - 5);
+      break;
+
     default:
       startDate.setMonth(startDate.getMonth() - 1);
   }
