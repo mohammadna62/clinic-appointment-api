@@ -11,6 +11,7 @@ import {
   markPatientNoShow as markPatientNoShowService,
   getAdminBookings as getAdminBookingsService,
   getAdminBookingById as getAdminBookingByIdService,
+  getDoctorStatistics as getDoctorStatisticsService,
 } from "../services/booking.service.js";
 
 export const createBooking = async (req, res, next) => {
@@ -181,6 +182,23 @@ export const getAdminBookingById = async (req, res, next) => {
     return successResponse(res, {
       message: "Booking retrieved successfully",
       data: { booking },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const getDoctorStatistics = async (req, res, next) => {
+  try {
+    const { period } = req.validated.query;
+
+    const statistics = await getDoctorStatisticsService(
+      req.user.userId,
+      period,
+    );
+
+    return successResponse(res, {
+      message: "Doctor statistics retrieved successfully",
+      data: statistics,
     });
   } catch (error) {
     next(error);

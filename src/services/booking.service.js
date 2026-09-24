@@ -5,6 +5,7 @@ import Payment from "./../models/payment.model.js";
 import AppError from "../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
 import { refundPaymentForBooking } from "./refund.service.js";
+import { getStatisticsDateRange } from "../utils/statistics.util.js";
 
 export async function createBooking(appointmentId, userId) {
   const appointment = await AvailableAppointment.findById(appointmentId);
@@ -435,4 +436,79 @@ export async function getAdminBookingById(bookingId) {
   }
 
   return booking;
+}
+export async function getDoctorStatistics(userId, period = "month") {
+  const currentDoctor = await Doctor.findOne({
+    user: userId,
+  });
+
+  if (!currentDoctor) {
+    throw new AppError("Doctor profile not found", 404);
+  }
+
+  const { startDate, endDate } = getStatisticsDateRange(period);
+
+  const filter = {
+    doctor: currentDoctor._id,
+    date: {
+      $gte: startDate,
+      $lte: endDate,
+    },
+  };
+
+  const [
+    totalBookings,
+    pendingBookings,
+    confirmedBookings,
+    completedBookings,
+    cancelledBookings,
+    patientNoShowBookings,
+    uniquePatients,
+  ] = await Promise.all([
+    Booking.countDocuments(filter),
+
+    Booking.countDocuments({
+      ...filter,
+      status: "pending",
+    }),
+
+    Booking.countDocuments({
+      ...filter,
+      status: "confirmed",
+    }),
+
+    Booking.countDocuments({
+      ...filter,
+      status: "completed",
+    }),
+
+    Booking.countDocuments({
+      ...filter,
+      status: "cancelled",
+    }),
+
+    Booking.countDocuments({
+      ...filter,
+      status: "patient_no_show",
+    }),
+
+    Booking.distinct("patient", filter),
+  ]);
+
+  return {
+    period,
+    startDate,
+    endDate,
+    bookings: {
+      total: totalBookings,
+      pending: pendingBookings,
+      confirmed: confirmedBookings,
+      completed: completedBookings,
+      cancelled: cancelledBookings,
+      patientNoShow: patientNoShowBookings,
+    },
+    patients: {
+      unique: uniquePatients.length,
+    },
+  };
 }

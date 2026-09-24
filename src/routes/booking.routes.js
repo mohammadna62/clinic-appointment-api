@@ -9,12 +9,15 @@ import {
   getPatientBookings,
   getPatientBookingById,
   cancelPatientBooking,
+  getDoctorStatistics,
 } from "../controllers/booking.controller.js";
 
 import {
   appointmentIdBookingSchema,
   bookingIdSchema,
 } from "../validators/booking.validator.js";
+
+import { statisticsQuerySchema } from "../validators/statistics.validator.js";
 import { paginationSchema } from "../validators/pagination.validator.js";
 
 const router = express.Router();
@@ -26,6 +29,14 @@ router
     roleGuard("patient"),
     validate(paginationSchema, "query"),
     getPatientBookings,
+  );
+router
+  .route("/statistics")
+  .get(
+    auth,
+    roleGuard("doctor"),
+    validate(statisticsQuerySchema, "query"),
+    getDoctorStatistics,
   );
 router
   .route("/:bookingId/cancel")
