@@ -7,7 +7,9 @@ import {
   getAdminPaymentById as getAdminPaymentByIdService,
 } from "../services/payment.service.js";
 
-
+import {
+  refundPayment as refundPaymentService,
+} from "../services/refund.service.js";
 
 export const createPayment = async (req, res, next) => {
   try {
@@ -69,6 +71,21 @@ export const getAdminPaymentById = async (req, res, next) => {
     return successResponse(res, {
       message: "Payment retrieved successfully",
       data: { payment },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const refundPayment = async (req, res, next) => {
+  try {
+    const { paymentId } = req.validated.params;
+
+    const payment = await refundPaymentService(paymentId);
+
+    return successResponse(res, {
+      message: "Payment refunded successfully",
+      data: payment,
     });
   } catch (error) {
     next(error);

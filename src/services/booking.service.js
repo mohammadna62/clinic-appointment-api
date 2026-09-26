@@ -4,7 +4,7 @@ import AvailableAppointment from "../models/available-appointment.model.js";
 import Payment from "./../models/payment.model.js";
 import AppError from "../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
-import { refundPaymentForBooking } from "./refund.service.js";
+
 import { getStatisticsDateRange } from "../utils/statistics.util.js";
 
 export async function createBooking(appointmentId, userId) {
@@ -157,8 +157,14 @@ export async function cancelPatientBooking(bookingId, userId) {
   }
 
   const year = booking.date.getUTCFullYear();
-  const month = String(booking.date.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(booking.date.getUTCDate()).padStart(2, "0");
+
+  const month = String(
+    booking.date.getUTCMonth() + 1,
+  ).padStart(2, "0");
+
+  const day = String(
+    booking.date.getUTCDate(),
+  ).padStart(2, "0");
 
   const appointmentStart = new Date(
     `${year}-${month}-${day}T${booking.startTime}:00.000Z`,
@@ -173,7 +179,8 @@ export async function cancelPatientBooking(bookingId, userId) {
     );
   }
 
-  const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+  const twentyFourHoursInMs =
+    24 * 60 * 60 * 1000;
 
   const millisecondsUntilAppointment =
     appointmentStart.getTime() - now.getTime();
@@ -185,47 +192,39 @@ export async function cancelPatientBooking(bookingId, userId) {
     booking: booking._id,
   });
 
-  let refundedPayment = null;
-
   if (payment?.status === "pending") {
     payment.status = "failed";
     await payment.save();
   }
 
-  if (
-    payment?.status === "paid" &&
-    refundEligible
-  ) {
-    refundedPayment =
-      await refundPaymentForBooking(booking._id);
-  }
-
   booking.status = "cancelled";
   booking.cancellationReason = "patient_cancelled";
+  booking.refundEligible = refundEligible;
 
   await booking.save();
 
-  const appointment = await AvailableAppointment.findOneAndUpdate(
-    {
-      _id: booking.appointment,
-      status: {
-        $in: ["reserved", "booked"],
+  const appointment =
+    await AvailableAppointment.findOneAndUpdate(
+      {
+        _id: booking.appointment,
+        status: {
+          $in: ["reserved", "booked"],
+        },
       },
-    },
-    {
-      $set: {
-        status: "available",
-        reservedBy: null,
-        reservedUntil: null,
+      {
+        $set: {
+          status: "available",
+          reservedBy: null,
+          reservedUntil: null,
+        },
       },
-    },
-    { new: true },
-  );
+      { new: true },
+    );
 
   return {
     booking,
     appointment,
-    payment: refundedPayment,
+    payment,
     refundEligible,
   };
 }

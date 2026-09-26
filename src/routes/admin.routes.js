@@ -105,6 +105,7 @@ import {
 import {
   getAdminPayments,
   getAdminPaymentById,
+  refundPayment,
 } from "./../controllers/payment.controller.js";
 
 import { getAdminStatistics } from "../controllers/admin-statistics.controller.js";
@@ -337,6 +338,14 @@ router
     roleGuard("admin"),
     validate(paymentIdSchema, "params"),
     getAdminPaymentById,
+  );
+router
+  .route("/payments/:paymentId/refund")
+  .post(
+    auth,
+    roleGuard("admin"),
+    validate(paymentIdSchema, "params"),
+    refundPayment,
   );
 
 export default router;
