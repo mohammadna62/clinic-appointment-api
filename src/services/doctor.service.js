@@ -5,6 +5,7 @@ import Specialty from "./../models/specialty.model.js";
 import AppError from "./../errors/app-error.js";
 import { createPaginationData } from "./../utils/pagination.util.js";
 import { deleteUploadedFile } from "./../utils/file.util.js";
+import { getDoctorRatingStats } from "./rating.service.js";
 
 export async function createDoctor(userId, data, file) {
   const { clinic, specialty, medicalCode, bio, consultationFee } = data;
@@ -81,9 +82,13 @@ export async function getDoctorById(doctorId) {
     throw new AppError("Doctor not found", 404);
   }
 
-  return doctor;
-}
+  const ratingStats = await getDoctorRatingStats(doctorId);
 
+  return {
+    doctor,
+    ratingStats,
+  };
+}
 export async function updateDoctor(userId, data, file) {
   const { clinic, specialty, medicalCode, bio } = data;
 

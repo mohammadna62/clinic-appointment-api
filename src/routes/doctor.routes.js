@@ -19,6 +19,9 @@ import {
 } from "../controllers/booking.controller.js";
 
 import { getDoctorSchedulesForPatient } from "./../controllers/doctor-schedule.controller.js";
+import { getDoctorRatings } from "../controllers/rating.controller.js";
+
+import { doctorRatingParamsSchema } from "../validators/rating.validator.js";
 
 import {
   createDoctorSchema,
@@ -90,14 +93,13 @@ router
 
 // Dynamic routes after static routes
 router
-  .route("/:doctorId")
+  .route("/:doctorId/ratings")
   .get(
     auth,
-    roleGuard("patient", "doctor", "admin"),
-    validate(doctorIdSchema, "params"),
-    getDoctorById,
+    validate(doctorRatingParamsSchema, "params"),
+    validate(paginationSchema, "query"),
+    getDoctorRatings,
   );
-
 router
   .route("/:doctorId/schedules")
   .get(
@@ -105,6 +107,14 @@ router
     roleGuard("patient"),
     validate(doctorIdSchema, "params"),
     getDoctorSchedulesForPatient,
+  );
+router
+  .route("/:doctorId")
+  .get(
+    auth,
+    roleGuard("patient", "doctor", "admin"),
+    validate(doctorIdSchema, "params"),
+    getDoctorById,
   );
 
 export default router;

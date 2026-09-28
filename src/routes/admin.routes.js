@@ -61,6 +61,12 @@ import {
 } from "../validators/payment.validator.js";
 
 import { statisticsQuerySchema } from "../validators/statistics.validator.js";
+import {
+  doctorRatingParamsSchema,
+  ratingIdSchema,
+} from "../validators/rating.validator.js";
+
+import { paginationSchema } from "../validators/pagination.validator.js";
 
 //* Controller
 
@@ -108,6 +114,11 @@ import {
   refundPayment,
 } from "./../controllers/payment.controller.js";
 
+import {
+  getAdminDoctorRatings,
+  deleteRating,
+} from "../controllers/rating.controller.js";
+
 import { getAdminStatistics } from "../controllers/admin-statistics.controller.js";
 
 const router = express.Router();
@@ -153,17 +164,6 @@ router
   );
 
 router
-  .route("/doctors/:doctorId")
-  .patch(
-    auth,
-    roleGuard("admin"),
-    upload.single("profileImage"),
-    validate(doctorIdSchema, "params"),
-    validate(updateDoctorSchema, "body"),
-    updateDoctorByAdmin,
-  );
-
-router
   .route("/doctors/:doctorId/status")
   .patch(
     auth,
@@ -172,8 +172,15 @@ router
     validate(updateDoctorStatusSchema, "body"),
     updateDoctorStatus,
   );
-
-//* Doctor Schedule Routes
+router
+  .route("/doctors/:doctorId/ratings")
+  .get(
+    auth,
+    roleGuard("admin"),
+    validate(doctorRatingParamsSchema, "params"),
+    validate(paginationSchema, "query"),
+    getAdminDoctorRatings,
+  );
 
 router
   .route("/doctors/:doctorId/schedules")
@@ -205,6 +212,26 @@ router
     roleGuard("admin"),
     validate(doctorScheduleParamsSchema, "params"),
     deleteDoctorSchedule,
+  );
+router
+  .route("/doctors/:doctorId")
+  .patch(
+    auth,
+    roleGuard("admin"),
+    upload.single("profileImage"),
+    validate(doctorIdSchema, "params"),
+    validate(updateDoctorSchema, "body"),
+    updateDoctorByAdmin,
+  );
+
+//* Rating Routes
+router
+  .route("/ratings/:ratingId")
+  .delete(
+    auth,
+    roleGuard("admin"),
+    validate(ratingIdSchema, "params"),
+    deleteRating,
   );
 
 //* Clinic Routes

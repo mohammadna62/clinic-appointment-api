@@ -40,6 +40,8 @@ const ratingSchema = new mongoose.Schema(
   },
 );
 
+ratingSchema.index({ doctor: 1, createdAt: -1 });
+
 const Rating = mongoose.model("Rating", ratingSchema);
 
 export default Rating;
