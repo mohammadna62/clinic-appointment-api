@@ -26,7 +26,13 @@ const envSchema = z.object({
   REFRESH_TOKEN_EXPIRE_SECONDS: z.coerce.number(),
   TOKEN_HASH_SECRET: z.string().min(1),
   OTP_EXPIRE_SECONDS: z.coerce.number(),
-
+  REFRESH_TOKEN_EXPIRE_SECONDS: z.coerce.number(),
+  TOKEN_HASH_SECRET: z.string().min(1),
+  OTP_EXPIRE_SECONDS: z.coerce.number(),
+  OTP_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive(),
+  OTP_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive(),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+  
   // SMS Panel
   SMS_USERNAME: z.string().optional(),
   SMS_PASSWORD: z.string().optional(),
@@ -38,7 +44,7 @@ const envSchema = z.object({
   ZARINPAL_PAYMENT_CALLBACK_URL: z.string().url(),
   ZARINPAL_PAYMENT_BASE_URL: z.string().url(),
   ZARINPAL_API_BASE_URL: z.string().url(),
- 
+
   // Time Zone
   PROJECT_TIME_ZONE: z.string(),
 });

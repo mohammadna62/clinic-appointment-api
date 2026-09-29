@@ -19,8 +19,11 @@ import doctorRoutes from "./routes/doctor.routes.js";
 import availableAppointmentRoutes from "./routes/available-appointment.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import env from "./config/env.js";
 
 const app = express();
+
+app.set("trust proxy", env.TRUST_PROXY_HOPS);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
