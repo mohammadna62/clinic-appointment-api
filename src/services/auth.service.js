@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import  mongoose  from "mongoose";
+import mongoose from "mongoose";
 import User from "./../models/user.model.js";
 import AppError from "./../errors/app-error.js";
 import { generateOtp } from "../utils/otp.util.js";
@@ -20,8 +20,26 @@ export async function sendOtp(phone) {
     throw new AppError("User is banned", 403);
   }
 
-  const otp = generateOtp();
+  const cooldownKey = `auth:otp:cooldown:${phone}`;
 
+  const cooldownSet = await redis.set(
+    cooldownKey,
+    "1",
+    "EX",
+    env.OTP_RESEND_COOLDOWN_SECONDS,
+    "NX",
+  );
+
+  if (cooldownSet === null) {
+    const retryAfter = await redis.ttl(cooldownKey);
+
+    throw new AppError(
+      `Please wait ${retryAfter} seconds before requesting another OTP`,
+      429,
+    );
+  }
+
+  const otp = generateOtp();
   const hashedOtp = await bcrypt.hash(otp, 12);
 
   const redisKey = `auth:otp:${phone}`;
@@ -30,7 +48,6 @@ export async function sendOtp(phone) {
 
   await sendSms(phone, otp);
 }
-
 export async function verifyOtp(phone, otp) {
   let user = await User.findOne({ phone });
 

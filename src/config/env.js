@@ -32,7 +32,8 @@ const envSchema = z.object({
   OTP_RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive(),
   OTP_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive(),
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
-  
+  OTP_RESEND_COOLDOWN_SECONDS: z.coerce.number().int().positive(),
+
   // SMS Panel
   SMS_USERNAME: z.string().optional(),
   SMS_PASSWORD: z.string().optional(),
