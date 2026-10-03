@@ -48,6 +48,9 @@ const envSchema = z.object({
 
   // Time Zone
   PROJECT_TIME_ZONE: z.string(),
+
+  // AI Assistant 
+  AI_PROVIDER: z.enum(["mock", "openai"]).default("mock"),
 });
 
 const parsedEnv = envSchema.parse(process.env);
