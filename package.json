@@ -34,6 +34,7 @@
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
+    "openai": "^7.27.0",
     "zarinpal-checkout": "^1.1.1",
     "zod": "^4.4.3"
   }

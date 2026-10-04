@@ -1,7 +1,5 @@
 import aiProvider from "../providers/ai/ai-provider.js";
-import {
-  findAvailableAppointments,
-} from "./assistant-tools.service.js";
+import { findAvailableAppointments } from "./assistant-tools.service.js";
 
 const conversations = new Map();
 
@@ -26,10 +24,7 @@ function addMessage(userId, role, content) {
   });
 
   if (conversation.length > MAX_HISTORY_MESSAGES) {
-    conversation.splice(
-      0,
-      conversation.length - MAX_HISTORY_MESSAGES,
-    );
+    conversation.splice(0, conversation.length - MAX_HISTORY_MESSAGES);
   }
 }
 
@@ -38,27 +33,22 @@ function formatAppointments(appointments) {
     return "برای این شرایط، نوبت آزادی پیدا نشد.";
   }
 
-  const lines = appointments.map(
-    (appointment, index) => {
-      const doctorName = [
-        appointment.doctor.firstName,
-        appointment.doctor.lastName,
-      ]
-        .filter(Boolean)
-        .join(" ");
+  const lines = appointments.map((appointment, index) => {
+    const doctorName = [
+      appointment.doctor.firstName,
+      appointment.doctor.lastName,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-      return `${index + 1}. دکتر ${doctorName} | ${appointment.doctor.specialty} | ${appointment.clinic.name} | ${appointment.date.toISOString().slice(0, 10)} | ${appointment.startTime}-${appointment.endTime} | ${appointment.price.toLocaleString()} ریال`;
-    },
-  );
+    return `${index + 1}. دکتر ${doctorName} | ${appointment.doctor.specialty} | ${appointment.clinic.name} | ${appointment.date.toISOString().slice(0, 10)} | ${appointment.startTime}-${appointment.endTime} | ${appointment.price.toLocaleString()} ریال`;
+  });
 
   return `نوبت‌های آزاد پیدا شده:\n${lines.join("\n")}`;
 }
 
-export async function chatWithAssistant(
-  userId,
-  message,
-) {
-  const history = getConversation(userId);
+export async function chatWithAssistant(userId, message) {
+  const history = [...getConversation(userId)];
 
   addMessage(userId, "user", message);
 
@@ -70,14 +60,11 @@ export async function chatWithAssistant(
   let response = result.message;
 
   if (result.type === "appointment_search") {
-    const appointments =
-      await findAvailableAppointments(
-        result.criteria,
-      );
+    const appointments = await findAvailableAppointments(
+      result.criteria,
+    );
 
-    response = response
-      ? response
-      : formatAppointments(appointments);
+    response = response || formatAppointments(appointments);
   }
 
   addMessage(userId, "assistant", response);

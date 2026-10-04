@@ -1,7 +1,6 @@
 import env from "../../config/env.js";
 import MockAIProvider from "./mock-ai.provider.js";
-
-let provider;
+import OpenAIProvider from "./openai-ai.provider.js";
 
 function createAIProvider() {
   switch (env.AI_PROVIDER) {
@@ -9,9 +8,7 @@ function createAIProvider() {
       return new MockAIProvider();
 
     case "openai":
-      throw new Error(
-        "OpenAI provider is not implemented yet",
-      );
+      return new OpenAIProvider();
 
     default:
       throw new Error(
@@ -20,6 +17,6 @@ function createAIProvider() {
   }
 }
 
-provider = createAIProvider();
+const provider = createAIProvider();
 
 export default provider;

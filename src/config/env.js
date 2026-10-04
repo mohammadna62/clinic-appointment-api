@@ -49,15 +49,22 @@ const envSchema = z.object({
   // Time Zone
   PROJECT_TIME_ZONE: z.string(),
 
-  // AI Assistant 
+  // AI Assistant
   AI_PROVIDER: z.enum(["mock", "openai"]).default("mock"),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default("gpt-6-luna"),
 });
 
 const parsedEnv = envSchema.parse(process.env);
 
+if (parsedEnv.AI_PROVIDER === "openai" && !parsedEnv.OPENAI_API_KEY) {
+  throw new Error(
+    "OPENAI_API_KEY is required when AI_PROVIDER is set to openai",
+  );
+}
+
 export default {
   ...parsedEnv,
-
   IS_DEVELOPMENT: parsedEnv.NODE_ENV === "development",
   IS_PRODUCTION: parsedEnv.NODE_ENV === "production",
 };
