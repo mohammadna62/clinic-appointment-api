@@ -2,7 +2,6 @@ import aiProvider from "../providers/ai/ai-provider.js";
 import { findAvailableAppointments } from "./assistant-tools.service.js";
 
 const conversations = new Map();
-
 const MAX_HISTORY_MESSAGES = 10;
 
 function getConversation(userId) {
@@ -24,7 +23,10 @@ function addMessage(userId, role, content) {
   });
 
   if (conversation.length > MAX_HISTORY_MESSAGES) {
-    conversation.splice(0, conversation.length - MAX_HISTORY_MESSAGES);
+    conversation.splice(
+      0,
+      conversation.length - MAX_HISTORY_MESSAGES,
+    );
   }
 }
 
@@ -41,13 +43,39 @@ function formatAppointments(appointments) {
       .filter(Boolean)
       .join(" ");
 
-    return `${index + 1}. دکتر ${doctorName} | ${appointment.doctor.specialty} | ${appointment.clinic.name} | ${appointment.date.toISOString().slice(0, 10)} | ${appointment.startTime}-${appointment.endTime} | ${appointment.price.toLocaleString()} ریال`;
+    return (
+      `${index + 1}. ` +
+      `دکتر ${doctorName} | ` +
+      `${appointment.doctor.specialty} | ` +
+      `${appointment.clinic.name} | ` +
+      `${appointment.date.toISOString().slice(0, 10)} | ` +
+      `${appointment.startTime}-${appointment.endTime} | ` +
+      `${appointment.price.toLocaleString()} ریال`
+    );
   });
 
   return `نوبت‌های آزاد پیدا شده:\n${lines.join("\n")}`;
 }
 
+async function executeAssistantTool(name, argumentsData) {
+  switch (name) {
+    case "search_available_appointments": {
+      const appointments = await findAvailableAppointments(
+        argumentsData,
+      );
+
+      return {
+        appointments,
+      };
+    }
+
+    default:
+      throw new Error(`Unknown assistant tool: ${name}`);
+  }
+}
+
 export async function chatWithAssistant(userId, message) {
+  // Snapshot BEFORE adding the current message.
   const history = [...getConversation(userId)];
 
   addMessage(userId, "user", message);
@@ -55,23 +83,16 @@ export async function chatWithAssistant(userId, message) {
   const result = await aiProvider.chat({
     message,
     history,
+    executeTool: executeAssistantTool,
   });
 
-  let response = result.message;
-
-  if (result.type === "appointment_search") {
-    const appointments = await findAvailableAppointments(
-      result.criteria,
-    );
-
-    response = response || formatAppointments(appointments);
-  }
+  const response = result.message;
 
   addMessage(userId, "assistant", response);
 
   return {
     message: response,
     type: result.type,
-    criteria: result.criteria,
+    criteria: result.criteria ?? null,
   };
 }

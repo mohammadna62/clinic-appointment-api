@@ -8,11 +8,12 @@ const client = new OpenAI({
 const SYSTEM_INSTRUCTIONS = `
 You are the AI assistant of a clinic appointment management system.
 
+You communicate naturally in Persian or English depending on the user's language.
+
 Your responsibilities:
 
-1. Help patients search for available appointments.
-2. Understand Persian and English.
-3. Understand natural language requests about:
+1. Help patients find available appointments.
+2. Understand natural language requests about:
    - doctors
    - specialties
    - clinics
@@ -20,98 +21,135 @@ Your responsibilities:
    - weekdays
    - time ranges
    - appointment availability
-4. Answer general non-medical questions naturally.
-5. Do not invent doctors, clinics, specialties, appointments, prices, or availability.
-6. The application, not the AI model, is the source of truth for appointment availability.
-7. When the user is asking about appointments, extract the search criteria.
-8. If an appointment search is missing an important date, ask the user for the date.
-9. Do not book or reserve an appointment.
-10. The assistant only helps the patient find suitable available appointments.
-11. Never claim that an appointment is available unless the application provides that information.
-12. For general medical questions, do not present a diagnosis or definitive medical treatment as a fact. Encourage the user to consult a qualified healthcare professional when appropriate.
+3. When the user asks about available appointments, use the
+   search_available_appointments tool.
+4. Never invent appointment availability.
+5. Never invent doctors, clinics, specialties, prices, or appointment times.
+6. The application database is the source of truth for appointment availability.
+7. You must not claim that an appointment exists unless the tool returns it.
+8. You do not book or reserve appointments.
+9. You only help the patient search for available appointments.
+10. If an appointment request is missing a required date, ask the user for the date.
+11. If the user asks a general question, answer naturally.
+12. For medical questions, do not diagnose the patient or provide definitive
+    medical treatment as fact. Encourage consultation with a qualified
+    healthcare professional when appropriate.
 
-Appointment search criteria:
+When searching appointments, use the following criteria:
 
-- specialty: string or null
-- doctor: string or null
-- clinic: string or null
-- date:
-    - today
-    - tomorrow
-    - weekday
-    - null
-- timeRange:
-    - morning
-    - afternoon
-    - evening
-    - null
+- specialty
+- doctor
+- clinic
+- date
+- timeRange
 
-When the user is continuing a previous appointment-search conversation, use the previous messages to understand missing criteria.
+Date types:
+
+- today
+- tomorrow
+- weekday
+
+Time ranges:
+
+- morning
+- afternoon
+- evening
+
+If the user's request contains enough information to search,
+call the search_available_appointments tool.
 `;
 
-const responseSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    type: {
-      type: "string",
-      enum: ["appointment_search", "general"],
-    },
-    criteria: {
-      type: ["object", "null"],
-      additionalProperties: false,
-      properties: {
-        specialty: {
-          type: ["string", "null"],
-        },
-        doctor: {
-          type: ["string", "null"],
-        },
-        clinic: {
-          type: ["string", "null"],
-        },
-        date: {
-          type: ["object", "null"],
-          additionalProperties: false,
-          properties: {
-            type: {
-              type: "string",
-              enum: ["today", "tomorrow", "weekday"],
-            },
-            weekday: {
-              type: ["string", "null"],
-            },
-          },
-          required: ["type", "weekday"],
-        },
-        timeRange: {
-          type: ["string", "null"],
-          enum: ["morning", "afternoon", "evening", null],
-        },
+const searchAvailableAppointmentsTool = {
+  type: "function",
+
+  name: "search_available_appointments",
+
+  description:
+    "Search real available clinic appointments based on doctor, " +
+    "specialty, clinic, date and time range. " +
+    "Use this tool whenever the patient asks about available appointments.",
+
+  strict: true,
+
+  parameters: {
+    type: "object",
+
+    additionalProperties: false,
+
+    properties: {
+      specialty: {
+        type: ["string", "null"],
+        description:
+          "Medical specialty requested by the patient.",
       },
-      required: [
-        "specialty",
-        "doctor",
-        "clinic",
-        "date",
-        "timeRange",
-      ],
+
+      doctor: {
+        type: ["string", "null"],
+        description:
+          "Doctor name requested by the patient.",
+      },
+
+      clinic: {
+        type: ["string", "null"],
+        description:
+          "Clinic name requested by the patient.",
+      },
+
+      date: {
+        type: ["object", "null"],
+
+        additionalProperties: false,
+
+        properties: {
+          type: {
+            type: "string",
+            enum: [
+              "today",
+              "tomorrow",
+              "weekday",
+            ],
+          },
+
+          weekday: {
+            type: ["string", "null"],
+          },
+        },
+
+        required: [
+          "type",
+          "weekday",
+        ],
+      },
+
+      timeRange: {
+        type: ["string", "null"],
+
+        enum: [
+          "morning",
+          "afternoon",
+          "evening",
+          null,
+        ],
+      },
     },
-    message: {
-      type: "string",
-    },
+
+    required: [
+      "specialty",
+      "doctor",
+      "clinic",
+      "date",
+      "timeRange",
+    ],
   },
-  required: ["type", "criteria", "message"],
 };
 
 function buildInput(history, message) {
-  const previousMessages = history.map((item) => ({
-    role: item.role,
-    content: item.content,
-  }));
-
   return [
-    ...previousMessages,
+    ...history.map((item) => ({
+      role: item.role,
+      content: item.content,
+    })),
+
     {
       role: "user",
       content: message,
@@ -120,38 +158,100 @@ function buildInput(history, message) {
 }
 
 export default class OpenAIProvider {
-  async chat({ message, history = [] }) {
-    const response = await client.responses.create({
+  async chat({
+    message,
+    history = [],
+    executeTool,
+  }) {
+    let input = buildInput(history, message);
+
+    const firstResponse = await client.responses.create({
       model: env.OPENAI_MODEL,
 
       instructions: SYSTEM_INSTRUCTIONS,
 
-      input: buildInput(history, message),
+      input,
 
-      text: {
-        format: {
-          type: "json_schema",
-          name: "assistant_response",
-          strict: true,
-          schema: responseSchema,
-        },
-      },
+      tools: [
+        searchAvailableAppointmentsTool,
+      ],
+
+      tool_choice: "auto",
     });
 
-    const outputText = response.output_text?.trim();
+    const toolCalls = firstResponse.output.filter(
+      (item) => item.type === "function_call",
+    );
 
-    if (!outputText) {
-      throw new Error("OpenAI returned an empty response");
+    // No tool call.
+    // The model has generated a normal response.
+    if (!toolCalls.length) {
+      return {
+        type: "general",
+        criteria: null,
+        message: firstResponse.output_text,
+      };
     }
 
-    let result;
+    const toolOutputs = [];
 
-    try {
-      result = JSON.parse(outputText);
-    } catch {
-      throw new Error("OpenAI returned invalid JSON");
+    for (const toolCall of toolCalls) {
+      if (toolCall.name !== "search_available_appointments") {
+        throw new Error(
+          `Unsupported AI tool: ${toolCall.name}`,
+        );
+      }
+
+      let argumentsData;
+
+      try {
+        argumentsData = JSON.parse(toolCall.arguments);
+      } catch {
+        throw new Error(
+          "OpenAI returned invalid tool arguments",
+        );
+      }
+
+      const toolResult = await executeTool(
+        toolCall.name,
+        argumentsData,
+      );
+
+      toolOutputs.push({
+        type: "function_call_output",
+
+        call_id: toolCall.call_id,
+
+        output: JSON.stringify(toolResult),
+      });
     }
 
-    return result;
+    input = [
+      ...input,
+
+      ...firstResponse.output,
+
+      ...toolOutputs,
+    ];
+
+    const finalResponse = await client.responses.create({
+      model: env.OPENAI_MODEL,
+
+      instructions: SYSTEM_INSTRUCTIONS,
+
+      input,
+
+      tools: [
+        searchAvailableAppointmentsTool,
+      ],
+
+      tool_choice: "auto",
+    });
+
+    return {
+      type: "appointment_search",
+      criteria: null,
+      message: finalResponse.output_text,
+    };
   }
 }
