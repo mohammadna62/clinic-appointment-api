@@ -96,6 +96,7 @@ router
   .route("/:doctorId/ratings")
   .get(
     auth,
+    roleGuard("patient"),
     validate(doctorRatingParamsSchema, "params"),
     validate(paginationSchema, "query"),
     getDoctorRatings,
