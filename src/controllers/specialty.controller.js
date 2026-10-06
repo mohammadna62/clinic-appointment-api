@@ -3,6 +3,7 @@ import {
   getSpecialties as getSpecialtiesService,
   getSpecialtyById as getSpecialtyByIdService,
   updateSpecialty as updateSpecialtyService,
+  getActiveSpecialties as getActiveSpecialtiesService,
 } from "./../services/specialty.service.js";
 
 import { successResponse } from "./../helpers/response.js";
@@ -67,6 +68,20 @@ export const updateSpecialty = async (req, res, next) => {
       data: {
         specialty,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const getActiveSpecialties = async (req, res, next) => {
+  try {
+    const { page, limit } = req.validated.query;
+
+    const result = await getActiveSpecialtiesService(page, limit);
+
+    return successResponse(res, {
+      message: "Specialties retrieved successfully",
+      data: result,
     });
   } catch (error) {
     next(error);

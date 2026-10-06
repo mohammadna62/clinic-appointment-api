@@ -348,3 +348,37 @@ export async function getActiveDoctorsByClinic(clinicId, page, limit) {
 
   return { doctors, pagination: createPaginationData(page, limit, total) };
 }
+export async function getActiveDoctorsBySpecialty(specialtyId, page, limit) {
+  const specialty = await Specialty.findOne({
+    _id: specialtyId,
+    isActive: true,
+  });
+
+  if (!specialty) {
+    throw new AppError("Specialty not found", 404);
+  }
+
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    specialty: specialtyId,
+    isActive: true,
+  };
+
+  const [doctors, total] = await Promise.all([
+    Doctor.find(filter)
+      .populate("user", "firstName lastName")
+      .populate("clinic", "name")
+      .populate("specialty", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Doctor.countDocuments(filter),
+  ]);
+
+  return {
+    doctors,
+    pagination: createPaginationData(page, limit, total),
+  };
+}

@@ -87,3 +87,24 @@ export async function updateSpecialty(specialtyId, data) {
 
   return specialty;
 }
+export async function getActiveSpecialties(page, limit) {
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    isActive: true,
+  };
+
+  const [specialties, total] = await Promise.all([
+    Specialty.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+
+    Specialty.countDocuments(filter),
+  ]);
+
+  return {
+    specialties,
+    pagination: createPaginationData(page, limit, total),
+  };
+}

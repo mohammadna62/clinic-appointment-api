@@ -6,6 +6,7 @@ import {
   updateDoctorStatus as updateDoctorStatusService,
   getDoctors as getDoctorsService,
   getActiveDoctorsByClinic as getActiveDoctorsByClinicService,
+  getActiveDoctorsBySpecialty as getActiveDoctorsBySpecialtyService,
 } from "./../services/doctor.service.js";
 
 import { successResponse } from "../helpers/response.js";
@@ -121,6 +122,25 @@ export const getActiveDoctorsByClinic = async (req, res, next) => {
     const { page, limit } = req.validated.query;
 
     const result = await getActiveDoctorsByClinicService(clinicId, page, limit);
+
+    return successResponse(res, {
+      message: "Doctors retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+export const getActiveDoctorsBySpecialty = async (req, res, next) => {
+  try {
+    const { specialtyId } = req.validated.params;
+    const { page, limit } = req.validated.query;
+
+    const result = await getActiveDoctorsBySpecialtyService(
+      specialtyId,
+      page,
+      limit,
+    );
 
     return successResponse(res, {
       message: "Doctors retrieved successfully",

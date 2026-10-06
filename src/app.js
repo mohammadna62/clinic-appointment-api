@@ -15,11 +15,13 @@ import userRoutes from "./routes/user.routes.js";
 import clinicRoutes from "./routes/clinic.routes.js";
 import patientClinicRoutes from "./routes/patient-clinic.routes.js";
 import specialtyRoutes from "./routes/specialty.routes.js";
+import patientSpecialtyRoutes from "./routes/patient-specialty.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 import availableAppointmentRoutes from "./routes/available-appointment.routes.js";
 import bookingRoutes from "./routes/booking.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import assistantRoutes from "./routes/assistant.routes.js";
+
 import env from "./config/env.js";
 
 const app = express();
@@ -62,6 +64,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/admin/clinics", clinicRoutes);
 app.use("/api/v1/clinics", patientClinicRoutes);
 app.use("/api/v1/admin/specialties", specialtyRoutes);
+app.use("/api/v1/specialties", patientSpecialtyRoutes);
 app.use("/api/v1/doctors", doctorRoutes);
 app.use("/api/v1/admin/available-appointments", adminRoutes);
 app.use("/api/v1/available-appointments", availableAppointmentRoutes);
