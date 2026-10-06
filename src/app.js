@@ -66,7 +66,6 @@ app.use("/api/v1/clinics", patientClinicRoutes);
 app.use("/api/v1/admin/specialties", specialtyRoutes);
 app.use("/api/v1/specialties", patientSpecialtyRoutes);
 app.use("/api/v1/doctors", doctorRoutes);
-app.use("/api/v1/admin/available-appointments", adminRoutes);
 app.use("/api/v1/available-appointments", availableAppointmentRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/payments", paymentRoutes);
