@@ -4,10 +4,12 @@ import helmet from "helmet";
 import compression from "compression";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import swaggerUi from "swagger-ui-express";
 import errorHandler from "./middlewares/error-handler.js";
 import AppError from "./errors/app-error.js";
 import path from "path";
 import { fileURLToPath } from "url";
+
 
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
@@ -23,6 +25,7 @@ import paymentRoutes from "./routes/payment.routes.js";
 import assistantRoutes from "./routes/assistant.routes.js";
 
 import env from "./config/env.js";
+import swaggerSpec from "./config/swagger.js";
 
 const app = express();
 
@@ -51,6 +54,13 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
+/*
+|--------------------------------------------------------------------------
+| Swagger Documentation
+|--------------------------------------------------------------------------
+*/
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /*
 |--------------------------------------------------------------------------
