@@ -10,7 +10,6 @@ import AppError from "./errors/app-error.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
-
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -86,14 +85,35 @@ app.use("/api/v1/assistant", assistantRoutes);
 | Health Check Route
 |--------------------------------------------------------------------------
 */
-
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Check API health
+ *     description: Checks whether the Clinic Appointment API is running.
+ *     tags:
+ *       - Health
+ *     responses:
+ *       200:
+ *         description: API is running successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Clinic Appointment API is running
+ */
 app.get("/api/v1/health", (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Clinic Appointment API is running",
   });
 });
-
 /*
 |--------------------------------------------------------------------------
 | 404 Handler
