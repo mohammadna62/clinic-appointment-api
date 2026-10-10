@@ -18,6 +18,131 @@ const swaggerDefinition = {
       description: "Local development server",
     },
   ],
+
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
+
+    schemas: {
+      ApiResponse: {
+        type: "object",
+        properties: {
+          status: {
+            type: "integer",
+            example: 200,
+          },
+
+          success: {
+            type: "boolean",
+            example: true,
+          },
+
+          message: {
+            type: "string",
+            example: "Request completed successfully",
+          },
+
+          data: {
+            type: "object",
+            nullable: true,
+          },
+        },
+      },
+
+      ErrorResponse: {
+        type: "object",
+        properties: {
+          status: {
+            type: "integer",
+            example: 404,
+          },
+
+          success: {
+            type: "boolean",
+            example: false,
+          },
+
+          message: {
+            type: "string",
+            example: "Resource not found",
+          },
+
+          errors: {
+            nullable: true,
+            example: null,
+          },
+        },
+      },
+
+      ValidationErrorResponse: {
+        type: "object",
+        properties: {
+          status: {
+            type: "integer",
+            example: 400,
+          },
+
+          success: {
+            type: "boolean",
+            example: false,
+          },
+
+          message: {
+            type: "string",
+            example: "Validation failed",
+          },
+
+          errors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                field: {
+                  type: "string",
+                  example: "mobile",
+                },
+
+                message: {
+                  type: "string",
+                  example: "Mobile number is required",
+                },
+              },
+            },
+          },
+        },
+      },
+
+      Pagination: {
+        type: "object",
+        properties: {
+          currentPage: {
+            type: "integer",
+            example: 1,
+          },
+
+          limit: {
+            type: "integer",
+            example: 10,
+          },
+
+          totalItems: {
+            type: "integer",
+            example: 35,
+          },
+
+          totalPages: {
+            type: "integer",
+            example: 4,
+          },
+        },
+      },
+    },
+  },
 };
 
 const swaggerOptions = {
