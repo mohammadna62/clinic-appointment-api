@@ -154,6 +154,60 @@ router
 
 //* Doctor Routes
 
+
+/**
+ * @swagger
+ * /admin/doctors:
+ *   get:
+ *     summary: Get doctors
+ *     description: Retrieves a paginated list of doctors. Requires administrator access.
+ *     tags: [Admin - Doctors]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive]
+ *         description: Filter doctors by their active status
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of doctors per page
+ *     responses:
+ *       200:
+ *         description: Doctors retrieved successfully
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router
   .route("/doctors")
   .get(
@@ -163,6 +217,75 @@ router
     getDoctors,
   );
 
+
+
+/**
+ * @swagger
+ * /admin/doctors/{doctorId}/status:
+ *   patch:
+ *     summary: Update doctor status
+ *     description: Activates or deactivates a doctor account. Requires administrator access.
+ *     tags: [Admin - Doctors]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - isActive
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *                 description: Set true to activate or false to deactivate the doctor
+ *                 example: true
+ *             additionalProperties: false
+ *           example:
+ *             isActive: true
+ *     responses:
+ *       200:
+ *         description: Doctor status updated successfully
+ *       400:
+ *         description: Invalid doctor ID or request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Doctor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router
   .route("/doctors/:doctorId/status")
   .patch(
@@ -172,6 +295,74 @@ router
     validate(updateDoctorStatusSchema, "body"),
     updateDoctorStatus,
   );
+
+
+/**
+ * @swagger
+ * /admin/doctors/{doctorId}/ratings:
+ *   get:
+ *     summary: Get doctor ratings
+ *     description: Retrieves a paginated list of ratings for a specific doctor. Requires administrator access.
+ *     tags: [Admin - Doctors]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of ratings per page
+ *     responses:
+ *       200:
+ *         description: Doctor ratings retrieved successfully
+ *       400:
+ *         description: Invalid doctor ID or pagination parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Doctor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router
   .route("/doctors/:doctorId/ratings")
   .get(
@@ -181,6 +372,7 @@ router
     validate(paginationSchema, "query"),
     getAdminDoctorRatings,
   );
+
 /**
  * @swagger
  * /admin/doctors/{doctorId}/schedules:
@@ -421,6 +613,84 @@ router
     deleteDoctorSchedule,
   );
 
+
+/**
+ * @swagger
+ * /admin/doctors/{doctorId}:
+ *   patch:
+ *     summary: Update doctor information
+ *     description: Allows an administrator to update a doctor's profile information, including the profile image.
+ *     tags: [Admin - Doctors]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               clinic:
+ *                 type: string
+ *                 description: Clinic ID
+ *               specialty:
+ *                 type: string
+ *                 description: Specialty ID
+ *               medicalCode:
+ *                 type: string
+ *                 description: Doctor's medical code
+ *               bio:
+ *                 type: string
+ *                 maxLength: 1000
+ *               consultationFee:
+ *                 type: number
+ *                 exclusiveMinimum: 0
+ *               profileImage:
+ *                 type: string
+ *                 format: binary
+ *             additionalProperties: false
+ *     responses:
+ *       200:
+ *         description: Doctor information updated successfully
+ *       400:
+ *         description: Invalid doctor ID or request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Doctor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router
   .route("/doctors/:doctorId")
   .patch(
@@ -431,6 +701,7 @@ router
     validate(updateDoctorSchema, "body"),
     updateDoctorByAdmin,
   );
+
 
 //* Rating Routes
 router
