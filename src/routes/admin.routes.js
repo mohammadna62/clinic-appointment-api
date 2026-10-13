@@ -181,7 +181,76 @@ router
     validate(paginationSchema, "query"),
     getAdminDoctorRatings,
   );
-
+/**
+ * @swagger
+ * /admin/doctors/{doctorId}/schedules:
+ *   post:
+ *     summary: Create a doctor schedule
+ *     tags: [Doctor Schedules]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - dayOfWeek
+ *               - startTime
+ *               - endTime
+ *             properties:
+ *               dayOfWeek:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 6
+ *               startTime:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "09:00"
+ *               endTime:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "17:00"
+ *     responses:
+ *       201:
+ *         description: Doctor schedule created successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Administrator access required
+ *
+ *   get:
+ *     summary: Get a doctor's schedules
+ *     tags: [Doctor Schedules]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *     responses:
+ *       200:
+ *         description: Doctor schedules retrieved successfully
+ *       400:
+ *         description: Invalid doctor ID
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Administrator access required
+ */
 router
   .route("/doctors/:doctorId/schedules")
   .post(
@@ -198,6 +267,144 @@ router
     getDoctorSchedules,
   );
 
+
+/**
+ * @swagger
+ * /admin/doctors/{doctorId}/schedules/{scheduleId}:
+ *   patch:
+ *     summary: Update a doctor schedule
+ *     description: Updates the start time, end time, or active status of a doctor's schedule. Requires administrator access.
+ *     tags: [Doctor Schedules]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the schedule
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             minProperties: 1
+ *             properties:
+ *               startTime:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "09:00"
+ *               endTime:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "12:00"
+ *               isActive:
+ *                 type: boolean
+ *                 example: true
+ *             additionalProperties: false
+ *             description: At least one field is required. If both times are provided, startTime must be before endTime.
+ *           example:
+ *             startTime: "09:00"
+ *             endTime: "12:00"
+ *     responses:
+ *       200:
+ *         description: Doctor schedule updated successfully
+ *       400:
+ *         description: Invalid doctor ID, schedule ID, or request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Doctor or schedule not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *   delete:
+ *     summary: Delete a doctor schedule
+ *     description: Deletes a specific schedule belonging to a doctor. Requires administrator access.
+ *     tags: [Doctor Schedules]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[a-fA-F0-9]{24}$'
+ *         description: MongoDB ObjectId of the schedule
+ *     responses:
+ *       200:
+ *         description: Doctor schedule deleted successfully
+ *       400:
+ *         description: Invalid doctor ID or schedule ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Doctor or schedule not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 router
   .route("/doctors/:doctorId/schedules/:scheduleId")
   .patch(
@@ -213,6 +420,7 @@ router
     validate(doctorScheduleParamsSchema, "params"),
     deleteDoctorSchedule,
   );
+
 router
   .route("/doctors/:doctorId")
   .patch(
