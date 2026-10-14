@@ -124,6 +124,63 @@ import { getAdminStatistics } from "../controllers/admin-statistics.controller.j
 const router = express.Router();
 
 //* Statistic Routes
+
+
+/**
+ * @swagger
+ * /admin/statistics:
+ *   get:
+ *     summary: Get admin statistics
+ *     description: Retrieves dashboard statistics for the selected time period.
+ *     tags: [Admin - Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - day
+ *             - week
+ *             - month
+ *             - 3months
+ *             - 6months
+ *             - year
+ *             - 5years
+ *           default: month
+ *         description: Time period used to calculate statistics. Defaults to month when omitted.
+ *         example: 3months
+ *     responses:
+ *       200:
+ *         description: Statistics retrieved successfully
+ *       400:
+ *         description: Invalid period query parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 router
   .route("/statistics")
   .get(
@@ -132,6 +189,7 @@ router
     validate(statisticsQuerySchema, "query"),
     getAdminStatistics,
   );
+
 
 //* User Routes
 router
