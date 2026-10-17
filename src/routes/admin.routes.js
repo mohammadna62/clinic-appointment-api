@@ -930,6 +930,262 @@ router
 
 //* Clinic Routes
 
+
+/**
+ * @swagger
+ * /admin/clinics/{clinicId}/time-policy:
+ *   post:
+ *     summary: Create clinic time policy
+ *     description: Creates the time policy for a clinic. Requires administrator access.
+ *     tags: [Admin - Clinic Time Policy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             required:
+ *               - morningStart
+ *               - morningEnd
+ *               - eveningStart
+ *               - eveningEnd
+ *               - appointmentDuration
+ *             properties:
+ *               morningStart:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "08:00"
+ *                 description: Morning session start time in 24-hour HH:mm format
+ *               morningEnd:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "12:00"
+ *                 description: Morning session end time in 24-hour HH:mm format
+ *               eveningStart:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "16:00"
+ *                 description: Evening session start time in 24-hour HH:mm format
+ *               eveningEnd:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "20:00"
+ *                 description: Evening session end time in 24-hour HH:mm format
+ *               appointmentDuration:
+ *                 type: integer
+ *                 minimum: 5
+ *                 maximum: 180
+ *                 example: 30
+ *                 description: Appointment duration in minutes
+ *     responses:
+ *       201:
+ *         description: Clinic time policy created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                   example: Clinic time policy created successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     policy:
+ *                       type: object
+ *                       description: Created clinic time policy
+ *       400:
+ *         description: Invalid clinic ID or request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *   get:
+ *     summary: Get clinic time policy
+ *     description: Retrieves the time policy for a clinic. Requires administrator access.
+ *     tags: [Admin - Clinic Time Policy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *     responses:
+ *       200:
+ *         description: Clinic time policy retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                   example: Clinic time policy retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     policy:
+ *                       type: object
+ *                       description: Retrieved clinic time policy
+ *       400:
+ *         description: Invalid clinic ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *   patch:
+ *     summary: Update clinic time policy
+ *     description: Updates the time policy for a clinic. Only supplied fields are updated. Requires administrator access.
+ *     tags: [Admin - Clinic Time Policy]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             properties:
+ *               morningStart:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "08:30"
+ *               morningEnd:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "12:30"
+ *               eveningStart:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "16:30"
+ *               eveningEnd:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "20:30"
+ *               appointmentDuration:
+ *                 type: integer
+ *                 minimum: 5
+ *                 maximum: 180
+ *                 example: 30
+ *                 description: Appointment duration in minutes
+ *             minProperties: 1
+ *     responses:
+ *       200:
+ *         description: Clinic time policy updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                   example: Clinic time policy updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     policy:
+ *                       type: object
+ *                       description: Updated clinic time policy
+ *       400:
+ *         description: Invalid clinic ID or request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 router
   .route("/clinics/:clinicId/time-policy")
   .post(
