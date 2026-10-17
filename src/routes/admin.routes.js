@@ -872,6 +872,53 @@ router
 
 
 //* Rating Routes
+
+/**
+ * @swagger
+ * /admin/ratings/{ratingId}:
+ *   delete:
+ *     summary: Delete a rating
+ *     description: Deletes a rating by ID. Requires administrator access.
+ *     tags: [Admin - Ratings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ratingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the rating
+ *     responses:
+ *       200:
+ *         description: Rating deleted successfully
+ *       400:
+ *         description: Invalid rating ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 router
   .route("/ratings/:ratingId")
   .delete(
