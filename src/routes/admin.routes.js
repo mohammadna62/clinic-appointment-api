@@ -1512,6 +1512,166 @@ router
 
 //* Appointment Routes
 
+/**
+ * @swagger
+ * /admin/available-appointments/generate/{doctorId}:
+ *   post:
+ *     summary: Generate appointments for a doctor on a specific date
+ *     tags: [Admin - Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - date
+ *             additionalProperties: false
+ *             properties:
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2026-10-20T00:00:00.000Z"
+ *                 description: Date for which appointments should be generated
+ *     responses:
+ *       201:
+ *         description: Appointments generated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ * /admin/available-appointments/generate-month/{doctorId}:
+ *   post:
+ *     summary: Generate appointments for a doctor
+ *     description: Generates doctor appointments using the configured generation service.
+ *     tags: [Admin - Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the doctor
+ *     responses:
+ *       201:
+ *         description: Doctor appointments generated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ * /admin/available-appointments/{appointmentId}/status:
+ *   patch:
+ *     summary: Update appointment status
+ *     tags: [Admin - Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: appointmentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the appointment
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             additionalProperties: false
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum:
+ *                   - available
+ *                   - suspended
+ *                 example: suspended
+ *                 description: New appointment status
+ *     responses:
+ *       200:
+ *         description: Appointment status updated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ * /admin/appointments:
+ *   get:
+ *     summary: Get appointments for administration
+ *     tags: [Admin - Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of appointments per page
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - available
+ *             - reserved
+ *             - booked
+ *             - suspended
+ *         description: Filter appointments by status
+ *     responses:
+ *       200:
+ *         description: Appointments retrieved successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 router
   .route("/available-appointments/generate/:doctorId")
   .post(
