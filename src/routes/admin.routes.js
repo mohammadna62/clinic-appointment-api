@@ -1209,6 +1209,173 @@ router
     updateClinicTimePolicy,
   );
 
+  
+/**
+ * @swagger
+ * /admin/clinics/{clinicId}/weekly-schedule:
+ *   post:
+ *     summary: Create a weekly schedule
+ *     description: Creates a weekly schedule entry for a clinic. Requires administrator access.
+ *     tags: [Admin - Weekly Schedule]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             required:
+ *               - dayOfWeek
+ *             properties:
+ *               dayOfWeek:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 6
+ *                 example: 1
+ *                 description: Day of the week, where 0 is Sunday and 6 is Saturday
+ *               isActive:
+ *                 type: boolean
+ *                 description: Whether this schedule entry is active
+ *                 example: true
+ *               morningStart:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "08:00"
+ *                 description: Morning session start time in HH:mm format
+ *               morningEnd:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "12:00"
+ *                 description: Morning session end time in HH:mm format
+ *               eveningStart:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "16:00"
+ *                 description: Evening session start time in HH:mm format
+ *               eveningEnd:
+ *                 type: string
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "20:00"
+ *                 description: Evening session end time in HH:mm format
+ *     responses:
+ *       201:
+ *         description: Weekly schedule created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                   example: Weekly schedule created successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     schedule:
+ *                       type: object
+ *                       description: Created weekly schedule
+ *       400:
+ *         description: Invalid clinic ID or request body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *   get:
+ *     summary: Get weekly schedules for a clinic
+ *     description: Retrieves the weekly schedule entries for a clinic. Requires administrator access.
+ *     tags: [Admin - Weekly Schedule]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *     responses:
+ *       200:
+ *         description: Weekly schedules retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                   example: Weekly schedules retrieved successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     schedules:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         description: Weekly schedule entry
+ *       400:
+ *         description: Invalid clinic ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ValidationErrorResponse'
+ *       401:
+ *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Administrator access required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
 router
   .route("/clinics/:clinicId/weekly-schedule")
   .post(
