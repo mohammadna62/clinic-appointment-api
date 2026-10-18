@@ -1392,6 +1392,108 @@ router
     getWeeklySchedules,
   );
 
+  /**
+ * @swagger
+ * /admin/clinics/{clinicId}/weekly-schedule/{scheduleId}:
+ *   patch:
+ *     summary: Update a clinic weekly schedule
+ *     tags: [Admin - Weekly Schedule]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the weekly schedule
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             additionalProperties: false
+ *             properties:
+ *               isActive:
+ *                 type: boolean
+ *                 description: Whether this weekly schedule is active
+ *               morningStart:
+ *                 type: string
+ *                 nullable: true
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "08:00"
+ *                 description: Morning session start time in HH:mm format, or null
+ *               morningEnd:
+ *                 type: string
+ *                 nullable: true
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "12:00"
+ *                 description: Morning session end time in HH:mm format, or null
+ *               eveningStart:
+ *                 type: string
+ *                 nullable: true
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "16:00"
+ *                 description: Evening session start time in HH:mm format, or null
+ *               eveningEnd:
+ *                 type: string
+ *                 nullable: true
+ *                 pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+ *                 example: "20:00"
+ *                 description: Evening session end time in HH:mm format, or null
+ *     responses:
+ *       200:
+ *         description: Weekly schedule updated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ *   delete:
+ *     summary: Delete a clinic weekly schedule
+ *     tags: [Admin - Weekly Schedule]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the clinic
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the weekly schedule
+ *     responses:
+ *       200:
+ *         description: Weekly schedule deleted successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 router
   .route("/clinics/:clinicId/weekly-schedule/:scheduleId")
   .patch(
