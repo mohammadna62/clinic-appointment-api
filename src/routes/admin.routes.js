@@ -1709,7 +1709,82 @@ router
     getAdminAppointments,
   );
 //* Booking Routes
-
+/**
+ * @swagger
+ * /admin/bookings:
+ *   get:
+ *     summary: Get bookings for administration
+ *     tags: [Admin - Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of bookings per page
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - pending
+ *             - confirmed
+ *             - cancelled
+ *             - completed
+ *             - patient_no_show
+ *         description: Filter bookings by status
+ *     responses:
+ *       200:
+ *         description: Admin bookings retrieved successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ * /admin/bookings/{bookingId}:
+ *   get:
+ *     summary: Get a booking by ID for administration
+ *     tags: [Admin - Bookings]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the booking
+ *     responses:
+ *       200:
+ *         description: Booking retrieved successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 router
   .route("/bookings")
   .get(
