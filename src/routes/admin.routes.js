@@ -1803,6 +1803,108 @@ router
     getAdminBookingById,
   );
 //* Payment Routes
+/**
+ * @swagger
+ * /admin/payments:
+ *   get:
+ *     summary: Get payments for administration
+ *     tags: [Admin - Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: Number of payments per page
+ *       - in: query
+ *         name: status
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - pending
+ *             - paid
+ *             - failed
+ *             - refunded
+ *         description: Filter payments by status
+ *     responses:
+ *       200:
+ *         description: Payments retrieved successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ * /admin/payments/{paymentId}:
+ *   get:
+ *     summary: Get a payment by ID for administration
+ *     tags: [Admin - Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: paymentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the payment
+ *     responses:
+ *       200:
+ *         description: Payment retrieved successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ *
+ * /admin/payments/{paymentId}/refund:
+ *   post:
+ *     summary: Refund a payment
+ *     description: Initiates a refund for the specified payment.
+ *     tags: [Admin - Payments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: paymentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the payment to refund
+ *     responses:
+ *       200:
+ *         description: Payment refunded successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 router
   .route("/payments")
   .get(
