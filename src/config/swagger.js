@@ -141,6 +141,53 @@ const swaggerDefinition = {
           },
         },
       },
+
+      CreateClinicRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name"],
+        properties: {
+          name: {
+            type: "string",
+            minLength: 2,
+            description: "Clinic name",
+          },
+          description: {
+            type: "string",
+            description: "Clinic description",
+          },
+        },
+      },
+
+      UpdateClinicRequest: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: {
+            type: "string",
+            minLength: 2,
+            maxLength: 100,
+            description: "Updated clinic name",
+          },
+          description: {
+            type: "string",
+            maxLength: 500,
+            description: "Updated clinic description",
+          },
+        },
+      },
+
+      UpdateClinicStatusRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["isActive"],
+        properties: {
+          isActive: {
+            type: "boolean",
+            description: "Whether the clinic is active",
+          },
+        },
+      },
     },
   },
 };
@@ -148,11 +195,7 @@ const swaggerDefinition = {
 const swaggerOptions = {
   definition: swaggerDefinition,
 
-  apis: [
-    "./src/app.js",
-    "./src/routes/*.js",
-    "./src/controllers/*.js",
-  ],
+  apis: ["./src/app.js", "./src/routes/*.js", "./src/controllers/*.js"],
 };
 
 const swaggerSpec = swaggerJSDoc(swaggerOptions);
