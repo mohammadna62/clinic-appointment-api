@@ -1,6 +1,6 @@
 import AppError from "./../errors/app-error.js";
 import User from "./../models/user.model.js";
-import { isProfileCompered } from "./../services/user.service.js";
+import { isProfileCompleted } from "./../services/user.service.js";
 
 const profileCompletion = async (req, res, next) => {
   try {
