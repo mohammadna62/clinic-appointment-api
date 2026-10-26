@@ -4,10 +4,7 @@ import Specialty from "../models/specialty.model.js";
 import Clinic from "../models/clinic.model.js";
 import User from "../models/user.model.js";
 import AppError from "../errors/app-error.js";
-import {
-  getTodayLocalDate,
-  addDays,
-} from "../utils/date.util.js";
+import { getTodayLocalDate, addDays } from "../utils/date.util.js";
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -47,13 +44,10 @@ function getWeekdayDate(weekday) {
   for (let i = 0; i < 7; i++) {
     const candidate = addDays(today, i);
 
-    const candidateDay = new Intl.DateTimeFormat(
-      "en-US",
-      {
-        weekday: "long",
-        timeZone: "UTC",
-      },
-    )
+    const candidateDay = new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      timeZone: "UTC",
+    })
       .format(candidate)
       .toLowerCase();
 
@@ -140,27 +134,19 @@ export async function findAvailableAppointments({
     };
   }
 
-  Object.assign(
-    appointmentFilter,
-    getTimeFilter(timeRange),
-  );
+  Object.assign(appointmentFilter, getTimeFilter(timeRange));
 
   let doctorIds;
 
   if (specialty) {
-    const specialtyRegex = new RegExp(
-      escapeRegex(specialty),
-      "i",
-    );
+    const specialtyRegex = new RegExp(escapeRegex(specialty), "i");
 
     const specialties = await Specialty.find({
       name: specialtyRegex,
       isActive: true,
     }).select("_id");
 
-    const specialtyIds = specialties.map(
-      (item) => item._id,
-    );
+    const specialtyIds = specialties.map((item) => item._id);
 
     if (!specialtyIds.length) {
       return [];
@@ -179,16 +165,10 @@ export async function findAvailableAppointments({
   }
 
   if (doctor) {
-    const doctorRegex = new RegExp(
-      escapeRegex(doctor),
-      "i",
-    );
+    const doctorRegex = new RegExp(escapeRegex(doctor), "i");
 
     const users = await User.find({
-      $or: [
-        { firstName: doctorRegex },
-        { lastName: doctorRegex },
-      ],
+      $or: [{ firstName: doctorRegex }, { lastName: doctorRegex }],
     }).select("_id");
 
     const userIds = users.map((user) => user._id);
@@ -198,9 +178,7 @@ export async function findAvailableAppointments({
       isActive: true,
     }).select("_id");
 
-    const searchedDoctorIds = doctors.map(
-      (item) => item._id,
-    );
+    const searchedDoctorIds = doctors.map((item) => item._id);
 
     if (!searchedDoctorIds.length) {
       return [];
@@ -209,15 +187,16 @@ export async function findAvailableAppointments({
     if (doctorIds) {
       doctorIds = doctorIds.filter((id) =>
         searchedDoctorIds.some(
-          (searchedId) =>
-            searchedId.toString() === id.toString(),
+          (searchedId) => searchedId.toString() === id.toString(),
         ),
       );
     } else {
       doctorIds = searchedDoctorIds;
     }
   }
-
+  if (doctorIds && doctorIds.length === 0) {
+    return [];
+  }
   if (doctorIds) {
     appointmentFilter.doctor = {
       $in: doctorIds,
@@ -225,19 +204,14 @@ export async function findAvailableAppointments({
   }
 
   if (clinic) {
-    const clinicRegex = new RegExp(
-      escapeRegex(clinic),
-      "i",
-    );
+    const clinicRegex = new RegExp(escapeRegex(clinic), "i");
 
     const clinics = await Clinic.find({
       name: clinicRegex,
       isActive: true,
     }).select("_id");
 
-    const clinicIds = clinics.map(
-      (item) => item._id,
-    );
+    const clinicIds = clinics.map((item) => item._id);
 
     if (!clinicIds.length) {
       return [];
@@ -248,30 +222,27 @@ export async function findAvailableAppointments({
     };
   }
 
-  const appointments =
-    await AvailableAppointment.find(
-      appointmentFilter,
-    )
-      .populate({
-        path: "doctor",
-        select: "user specialty clinic consultationFee",
-        populate: [
-          {
-            path: "user",
-            select: "firstName lastName",
-          },
-          {
-            path: "specialty",
-            select: "name",
-          },
-        ],
-      })
-      .populate("clinic", "name")
-      .sort({
-        date: 1,
-        startTime: 1,
-      })
-      .limit(limit);
+  const appointments = await AvailableAppointment.find(appointmentFilter)
+    .populate({
+      path: "doctor",
+      select: "user specialty clinic consultationFee",
+      populate: [
+        {
+          path: "user",
+          select: "firstName lastName",
+        },
+        {
+          path: "specialty",
+          select: "name",
+        },
+      ],
+    })
+    .populate("clinic", "name")
+    .sort({
+      date: 1,
+      startTime: 1,
+    })
+    .limit(limit);
 
   return appointments.map((appointment) => ({
     id: appointment._id,
@@ -281,12 +252,9 @@ export async function findAvailableAppointments({
     price: appointment.price,
     doctor: {
       id: appointment.doctor?._id,
-      firstName:
-        appointment.doctor?.user?.firstName,
-      lastName:
-        appointment.doctor?.user?.lastName,
-      specialty:
-        appointment.doctor?.specialty?.name,
+      firstName: appointment.doctor?.user?.firstName,
+      lastName: appointment.doctor?.user?.lastName,
+      specialty: appointment.doctor?.specialty?.name,
     },
     clinic: {
       id: appointment.clinic?._id,
