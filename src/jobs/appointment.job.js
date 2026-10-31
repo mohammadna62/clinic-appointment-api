@@ -1,23 +1,18 @@
+
 import cron from "node-cron";
 import env from "../config/env.js";
-
 import Doctor from "../models/doctor.model.js";
 import AvailableAppointment from "../models/available-appointment.model.js";
-
 import {
   generateAppointmentsForDate,
   generateDoctorAppointments,
   generateNextDayAppointments,
 } from "../services/available-appointment.service.js";
-
 import { expireReservations } from "../services/reservation.service.js";
-
 import { getTodayLocalDate, addDays } from "../utils/date.util.js";
 
 export async function generateNextDayAppointmentsForAllDoctors() {
-  const doctors = await Doctor.find({
-    isActive: true,
-  }).select("_id");
+  const doctors = await Doctor.find({ isActive: true }).select("_id");
 
   for (const doctor of doctors) {
     try {
@@ -36,18 +31,13 @@ export async function generateNextDayAppointmentsForAllDoctors() {
 }
 
 export async function recoverMissingAppointments() {
-  const doctors = await Doctor.find({
-    isActive: true,
-  }).select("_id");
+  const doctors = await Doctor.find({ isActive: true }).select("_id");
 
   const today = getTodayLocalDate();
-
   const deleteBefore = addDays(today, -2);
 
   await AvailableAppointment.deleteMany({
-    date: {
-      $lt: deleteBefore,
-    },
+    date: { $lt: deleteBefore },
   });
 
   const targetDate = addDays(today, 29);
@@ -117,9 +107,7 @@ export function startAppointmentJob() {
         console.error("[Appointment Job] Job failed:", error);
       }
     },
-    {
-      timezone: env.PROJECT_TIME_ZONE,
-    },
+    { timezone: env.PROJECT_TIME_ZONE },
   );
 }
 
@@ -135,20 +123,12 @@ export function startReservationExpirationJob() {
           result.cancelledBookings > 0 ||
           result.failedPayments > 0
         ) {
-          console.log(
-            "[Reservation Expiration]",
-            result,
-          );
+          console.log("[Reservation Expiration]", result);
         }
       } catch (error) {
-        console.error(
-          "[Reservation Expiration] Failed:",
-          error,
-        );
+        console.error("[Reservation Expiration] Failed:", error);
       }
     },
-    {
-      timezone: env.PROJECT_TIME_ZONE,
-    },
+    { timezone: env.PROJECT_TIME_ZONE },
   );
 }
