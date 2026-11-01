@@ -13,6 +13,7 @@ import {
 import env from "./../config/env.js";
 import { hashToken, compareToken } from "./../utils/hash.util.js";
 
+
 export async function sendOtp(phone) {
   const user = await User.findOne({ phone });
 
@@ -46,8 +47,18 @@ export async function sendOtp(phone) {
 
   await redis.set(redisKey, hashedOtp, "EX", env.OTP_EXPIRE_SECONDS);
 
-  await sendSms(phone, otp);
+  try {
+    await sendSms(phone, otp);
+  } catch (error) {
+    await Promise.allSettled([
+      redis.del(redisKey),
+      redis.del(cooldownKey),
+    ]);
+
+    throw new AppError("Failed to send OTP. Please try again later.", 502);
+  }
 }
+
 export async function verifyOtp(phone, otp) {
   let user = await User.findOne({ phone });
 

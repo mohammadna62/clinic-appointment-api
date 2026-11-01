@@ -62,10 +62,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../src/utils/jwt.util.js";
-import {
-  hashToken,
-  compareToken,
-} from "../src/utils/hash.util.js";
+import { hashToken, compareToken } from "../src/utils/hash.util.js";
 
 import {
   sendOtp,
@@ -182,11 +179,26 @@ describe("Auth Service", () => {
         statusCode: 429,
       });
 
-      expect(redis.ttl).toHaveBeenCalledWith(
-        `auth:otp:cooldown:${phone}`,
-      );
+      expect(redis.ttl).toHaveBeenCalledWith(`auth:otp:cooldown:${phone}`);
       expect(generateOtp).not.toHaveBeenCalled();
       expect(sendSms).not.toHaveBeenCalled();
+    });
+
+    it("should remove OTP and cooldown keys if SMS delivery fails", async () => {
+      sendSms.mockRejectedValueOnce(
+        new Error("SMS Provider connection failed"),
+      );
+
+      await expect(sendOtp(phone)).rejects.toMatchObject({
+        message: "Failed to send OTP. Please try again later.",
+        statusCode: 502,
+      });
+
+      expect(redis.del).toHaveBeenCalledTimes(2);
+
+      expect(redis.del).toHaveBeenCalledWith(`auth:otp:${phone}`);
+
+      expect(redis.del).toHaveBeenCalledWith(`auth:otp:cooldown:${phone}`);
     });
   });
 
@@ -309,9 +321,7 @@ describe("Auth Service", () => {
 
       const result = await refreshToken(refreshTokenValue);
 
-      expect(verifyRefreshToken).toHaveBeenCalledWith(
-        refreshTokenValue,
-      );
+      expect(verifyRefreshToken).toHaveBeenCalledWith(refreshTokenValue);
       expect(User.findById).toHaveBeenCalledWith(userId);
       expect(compareToken).toHaveBeenCalledWith(
         refreshTokenValue,
@@ -337,9 +347,7 @@ describe("Auth Service", () => {
     it("should reject if the user does not exist", async () => {
       User.findById.mockResolvedValue(null);
 
-      await expect(
-        refreshToken(refreshTokenValue),
-      ).rejects.toMatchObject({
+      await expect(refreshToken(refreshTokenValue)).rejects.toMatchObject({
         message: "User not found",
         statusCode: 401,
       });
@@ -348,9 +356,7 @@ describe("Auth Service", () => {
     it("should reject a banned user", async () => {
       user.isBanned = true;
 
-      await expect(
-        refreshToken(refreshTokenValue),
-      ).rejects.toMatchObject({
+      await expect(refreshToken(refreshTokenValue)).rejects.toMatchObject({
         message: "User is banned",
         statusCode: 403,
       });
@@ -361,9 +367,7 @@ describe("Auth Service", () => {
     it("should reject a deleted user", async () => {
       user.isDeleted = true;
 
-      await expect(
-        refreshToken(refreshTokenValue),
-      ).rejects.toMatchObject({
+      await expect(refreshToken(refreshTokenValue)).rejects.toMatchObject({
         message: "User account has been deleted",
         statusCode: 403,
       });
@@ -372,9 +376,7 @@ describe("Auth Service", () => {
     it("should reject an expired refresh token", async () => {
       redis.get.mockResolvedValue(null);
 
-      await expect(
-        refreshToken(refreshTokenValue),
-      ).rejects.toMatchObject({
+      await expect(refreshToken(refreshTokenValue)).rejects.toMatchObject({
         message: "Refresh token expired",
         statusCode: 401,
       });
@@ -383,9 +385,7 @@ describe("Auth Service", () => {
     it("should reject an invalid refresh token", async () => {
       compareToken.mockReturnValue(false);
 
-      await expect(
-        refreshToken(refreshTokenValue),
-      ).rejects.toMatchObject({
+      await expect(refreshToken(refreshTokenValue)).rejects.toMatchObject({
         message: "Invalid refresh token",
         statusCode: 401,
       });
@@ -407,14 +407,10 @@ describe("Auth Service", () => {
         _id: { $ne: userId },
       });
 
-      expect(User.findByIdAndUpdate).toHaveBeenCalledWith(
-        userId,
-        profile,
-        {
-          new: true,
-          runValidators: true,
-        },
-      );
+      expect(User.findByIdAndUpdate).toHaveBeenCalledWith(userId, profile, {
+        new: true,
+        runValidators: true,
+      });
 
       expect(result).toBe(user);
     });
@@ -435,9 +431,7 @@ describe("Auth Service", () => {
     it("should reject a national code already used by another user", async () => {
       User.findOne.mockResolvedValue({ _id: "another-user" });
 
-      await expect(
-        completeProfile(userId, profile),
-      ).rejects.toMatchObject({
+      await expect(completeProfile(userId, profile)).rejects.toMatchObject({
         message: "National code is already in use",
         statusCode: 409,
       });
@@ -448,9 +442,7 @@ describe("Auth Service", () => {
     it("should throw 404 if the user does not exist", async () => {
       User.findByIdAndUpdate.mockResolvedValue(null);
 
-      await expect(
-        completeProfile(userId, profile),
-      ).rejects.toMatchObject({
+      await expect(completeProfile(userId, profile)).rejects.toMatchObject({
         message: "User not found",
         statusCode: 404,
       });
@@ -461,9 +453,7 @@ describe("Auth Service", () => {
     it("should delete the user's refresh token", async () => {
       await logout(userId);
 
-      expect(redis.del).toHaveBeenCalledWith(
-        `auth:refresh:${userId}`,
-      );
+      expect(redis.del).toHaveBeenCalledWith(`auth:refresh:${userId}`);
     });
 
     it("should reject an invalid user ID", async () => {
